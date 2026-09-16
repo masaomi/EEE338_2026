@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="200" viewBox="0 0 900 200" aria-label="the agent runs inside the cluster next to the data; only text leaves the cluster to the API; you reach it over ssh"><title>the agent runs inside the cluster next to the data; only text leaves the cluster to the API; you reach it over ssh</title><rect x="0" y="0" width="900" height="200" fill="#ffffff"/>
+    <rect x="250" y="20" width="400" height="160" rx="14" fill="#f2f2ef" stroke="#1b1b1b" stroke-width="4"/>
+    <text x="450" y="50" font-size="20" text-anchor="middle" font-weight="700">fgcz-kl-004</text>
+    <rect x="280" y="75" width="150" height="80" rx="10" fill="#fff" stroke="#8a8f98" stroke-width="3"/>
+    <text x="355" y="110" font-size="20" text-anchor="middle" fill="#666">data</text>
+    <text x="355" y="136" font-size="15" text-anchor="middle" fill="#666">130 GB, stays here</text>
+    <rect x="470" y="75" width="150" height="80" rx="10" fill="#fff" stroke="#1b5e9e" stroke-width="4"/>
+    <text x="545" y="110" font-size="20" text-anchor="middle" fill="#1b5e9e" font-weight="700">agent</text>
+    <text x="545" y="136" font-size="15" text-anchor="middle" fill="#1b5e9e">reads, runs, retries</text>
+    <path d="M432 115 H466" stroke="#1b5e9e" stroke-width="4" marker-end="url(#ab)"/>
+    <rect x="40" y="70" width="140" height="70" rx="10" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <text x="110" y="100" font-size="20" text-anchor="middle" font-weight="700">you</text>
+    <text x="110" y="124" font-size="15" text-anchor="middle" fill="#666">laptop, ssh</text>
+    <path d="M182 105 H244" stroke="#1b1b1b" stroke-width="3" marker-end="url(#ak)"/>
+    <ellipse cx="790" cy="105" rx="90" ry="45" fill="#fdf3f2" stroke="#b3261e" stroke-width="3"/>
+    <text x="790" y="100" font-size="16" text-anchor="middle" fill="#b3261e" font-weight="700">api.anthropic.com</text>
+    <text x="790" y="122" font-size="14" text-anchor="middle" fill="#b3261e">outside FGCZ</text>
+    <path d="M622 105 H694" stroke="#b3261e" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#am)"/>
+    <text x="658" y="92" font-size="14" text-anchor="middle" fill="#b3261e">text only</text>
+    <defs>
+      <marker id="ab" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1b5e9e"/></marker>
+      <marker id="ak" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1b1b1b"/></marker>
+      <marker id="am" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#b3261e"/></marker>
+    </defs>
+  </svg>

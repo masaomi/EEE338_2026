@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EEE338 2026 — AI Agents for Bioinformatics</title>
+
+<!-- reveal.js is vendored in this repository on purpose.
+     The previous nbconvert deck pulled reveal, jQuery and MathJax from
+     unpkg and cdnjs; if the lecture-room network hiccups, that deck loses
+     its stylesheet and its slide framework. This one has no external
+     references at all. -->
+<link rel="stylesheet" href="vendor/reveal.js/dist/reset.css">
+<link rel="stylesheet" href="vendor/reveal.js/dist/reveal.css">
+<link rel="stylesheet" href="vendor/reveal.js/dist/theme/white.css">
+<link rel="stylesheet" href="vendor/reveal.js/plugin/highlight/zenburn.css">
+
+<style>
+:root{
+  --ink:#1b1b1b; --dim:#666; --rule:#d8d8d8;
+  --hot:#b3261e;      /* traps, warnings */
+  --cool:#1b5e9e;     /* the tools, the machine */
+  --ok:#2e6f40;       /* verified numbers */
+  --paper:#fbfbf9;
+}
+.reveal{ font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; color:var(--ink); font-size:30px; }
+.reveal .slides{ text-align:left; }
+.reveal .slides section{ height:100%; }
+.reveal h1,.reveal h2,.reveal h3,.reveal h4{
+  text-transform:none; letter-spacing:0; font-weight:700; color:var(--ink); margin-bottom:.4em; }
+.reveal h1{ font-size:1.9em; line-height:1.15; }
+.reveal h2{ font-size:1.35em; line-height:1.2; border-bottom:3px solid var(--ink); padding-bottom:.18em; }
+.reveal h3{ font-size:1.05em; color:var(--cool); }
+.reveal p,.reveal li{ line-height:1.4; }
+.reveal ul,.reveal ol{ margin-left:.6em; }
+.reveal li{ margin-bottom:.32em; }
+.reveal a{ color:var(--cool); }
+.reveal section img{ border:none; box-shadow:none; }
+
+/* slide number + session badge in the corner */
+.sess{ position:absolute; top:-1.1em; right:0; font-size:.5em; letter-spacing:.06em;
+       color:#fff; background:var(--cool); padding:.18em .6em; border-radius:3px; }
+.sess.s2{ background:#4a6b8a; } .sess.s3{ background:#7a5c3e; } .sess.s4{ background:#5c4a6b; }
+
+/* the one-line takeaway that closes a slide */
+.spine{ margin-top:.7em; padding:.45em .7em; border-left:6px solid var(--ink);
+        background:#f2f2ef; font-weight:600; }
+
+/* a trap: something that is wrong in a way that looks right */
+.trap{ border:2px solid var(--hot); border-radius:5px; padding:.5em .8em; background:#fdf3f2; }
+.trap > .lab{ display:block; font-size:.62em; letter-spacing:.1em; text-transform:uppercase;
+              color:var(--hot); font-weight:700; margin-bottom:.25em; }
+
+/* a verified measurement */
+.meas{ border:2px solid var(--ok); border-radius:5px; padding:.5em .8em; background:#f2f8f3; }
+.meas > .lab{ display:block; font-size:.62em; letter-spacing:.1em; text-transform:uppercase;
+              color:var(--ok); font-weight:700; margin-bottom:.25em; }
+
+/* terminal transcript */
+.term{ background:#22242a; color:#e6e6e6; font-family:"SF Mono",Menlo,Consolas,monospace;
+       font-size:.56em; line-height:1.35; padding:.7em .9em; border-radius:5px;
+       white-space:pre; overflow-x:auto; }
+.term .u{ color:#8fd3ff; }            /* what the human typed */
+.term .g{ color:#9ad39a; }            /* good / real output */
+.term .r{ color:#ff9a92; }            /* the wrong bit */
+.term .c{ color:#8a8f98; }            /* comment */
+
+.reveal table{ font-size:.72em; border-collapse:collapse; width:100%; margin:.4em 0; }
+.reveal table th{ background:#efefec; border-bottom:2px solid var(--ink);
+                  text-align:left; padding:.28em .5em; font-size:.95em; }
+.reveal table td{ border-bottom:1px solid var(--rule); padding:.24em .5em; }
+.reveal table td.n{ text-align:right; font-family:"SF Mono",Menlo,monospace; }
+tr.hi td{ background:#fdf3f2; font-weight:700; }
+tr.ok td{ background:#f2f8f3; }
+
+.two{ display:grid; grid-template-columns:1fr 1fr; gap:1em; }
+.three{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:.8em; }
+.small{ font-size:.72em; } .tiny{ font-size:.58em; color:var(--dim); }
+.dim{ color:var(--dim); }
+.src{ position:absolute; bottom:-1.3em; left:0; font-size:.42em; color:var(--dim); }
+
+/* placeholder for a screenshot Masa still has to take */
+.figph{ border:2px dashed #b9b9b9; border-radius:5px; background:#f6f6f4;
+        padding:1.1em .8em; text-align:center; color:#8a8a8a; font-size:.66em; }
+.figph b{ color:#6a6a6a; }
+
+/* --- diagram parts, so a slide can show rather than tell --------------- */
+
+/* labelled horizontal bar: <div class="barrow"><span>label</span>
+     <span class="track"><i class="bar" style="width:70%"></i></span><span>note</span></div> */
+.barrow{ display:grid; grid-template-columns:11em 1fr 7em; align-items:center;
+         gap:.6em; margin:.3em 0; font-size:.68em; }
+.track{ background:#ececea; border-radius:3px; height:1.3em; display:block; }
+.bar{ display:block; height:100%; border-radius:3px; background:var(--cool); }
+.bar.grey{ background:#a9a9a4; } .bar.hot{ background:var(--hot); }
+.bar.ok{ background:var(--ok); }
+
+/* a single big number with a caption under it */
+.figs{ display:grid; grid-template-columns:1fr 1fr; gap:1em; margin-top:.5em; }
+.fig{ text-align:center; padding:.7em .5em; border-radius:5px; background:#f2f2ef; }
+.fig.bad{ background:#fdf3f2; border:2px solid var(--hot); }
+.fig .cap{ font-size:.5em; letter-spacing:.09em; text-transform:uppercase; color:var(--dim); }
+.fig.bad .cap{ color:var(--hot); }
+.fig .num{ font-size:2.2em; font-weight:700; line-height:1.05; color:#6a6a6a; }
+.fig.bad .num{ color:var(--hot); }
+.fig .unit{ font-size:.72em; }
+
+/* left-to-right flow: box → box → box */
+.flow{ display:flex; align-items:center; gap:.45em; flex-wrap:wrap; font-size:.66em;
+       margin:.5em 0; }
+.flow .b{ border:2px solid var(--ink); border-radius:5px; padding:.32em .6em;
+          background:#fff; font-weight:600; }
+.flow .b.cool{ border-color:var(--cool); color:var(--cool); }
+.flow .b.hot{ border-color:var(--hot); color:var(--hot); }
+.flow .ar{ color:var(--dim); font-weight:700; }
+
+/* callout pinned next to a terminal transcript */
+.note{ font-size:.58em; color:var(--cool); font-weight:600; }
+
+kbd{ background:#eee; border:1px solid #bbb; border-bottom-width:2px; border-radius:3px;
+     padding:.05em .35em; font-family:Menlo,monospace; font-size:.85em; }
+code{ background:#f0f0ed; padding:.05em .28em; border-radius:3px;
+      font-family:"SF Mono",Menlo,monospace; font-size:.88em; }
+
+/* the divider slides between sessions: title centred both ways */
+.reveal .slides section.divider{ display:flex !important; flex-direction:column;
+        justify-content:center; align-items:center; text-align:center !important; }
+.divider h1{ font-size:2.4em; }
+.divider .when{ font-size:.9em; color:var(--dim); letter-spacing:.1em; margin-top:.6em; }
+
+/* the one message a slide exists for: red, and it appears on the next key press
+   (reveal.js fragment). <div class="spine key fragment">…</div> */
+.spine.key{ border-left-color:var(--hot); background:#fdf3f2; color:var(--hot); }
+
+/* a screenshot Masa takes; sized so the layout does not jump when it arrives */
+.shot{ border:2px dashed #b9b9b9; border-radius:5px; background:#f6f6f4; color:#8a8a8a;
+       font-size:.6em; display:flex; align-items:center; justify-content:center; }
+
+/* inline SVG illustrations */
+.ill{ width:100%; height:auto; display:block; margin:.4em auto; }
+.ill text{ font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+
+<!-- ===================================================================== -->
+<!-- 0. FRAME                                                              -->
+<!-- ===================================================================== -->
+
+<section data-background-color="#1b1b1b">
+  <h1 style="color:#fff">AI Agents for<br>Bioinformatics</h1>
+  <p style="color:#9ad39a; font-size:.8em; margin-top:.8em">
+    EEE338 — Next Generation Sequencing for Evolutionary Functional Genomics</p>
+  <p style="color:#8a8f98; font-size:.62em">
+    University of Zurich / FGCZ · Masaomi Hatakeyama<br>
+    17 September 2026 · one hour</p>
+  <p class="tiny" style="color:#666; margin-top:1.2em">
+    github.com/masaomi/EEE338_2026</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>2 — What we will cover</h2>
+  <table>
+    <tr><th style="width:22%">Session</th><th>Block</th></tr>
+    <tr class="ok"><td><b>Today</b><br><span class="tiny">17 Sep · 1 h · slides 2–23</span></td>
+        <td><b>0. Set up</b> — install, your key, first screen. <b>We do this first.</b><br>
+            <b>1. The rules that bind you</b> — ethics, data classes, three cautions<br>
+            <b>2. The tools</b> — what an LLM is, what an agent is, and which one for which job</td></tr>
+    <tr><td>18 Sep</td><td><b>3. Claude Code in practice</b> — the two files that decide what
+            it knows. Then <b>at the keyboard</b>: the page <code>EEE338_2026_Claude_Code</code>,
+            then Command Practice and Mapping</td></tr>
+    <tr><td>22 Sep</td><td><b>4. How it fails on our data</b> — the five failures, and
+            which practical each one lives in<br>
+            <span class="tiny">you run them; they are exercises, not slides</span></td></tr>
+    <tr><td>23 Sep</td><td><b>5. What you are graded on</b></td></tr>
+    <tr><td colspan="2"><span class="tiny">From 18 September the slides continue in a second
+            deck, <code>EEE338_2026_AI_Agents_part2</code>. The numbering runs straight on.</span></td></tr>
+  </table>
+</section>
+
+<section data-background-color="#1b1b1b">
+  <h2 style="color:#fff; border-color:#9ad39a">3 — One sentence to keep</h2>
+  <p style="color:#fff; font-size:1.35em; line-height:1.35; margin-top:.6em">
+    It is a <b style="color:#9ad39a">very fast typist</b>,<br>
+    not a biologist,<br>
+    and it has <b style="color:#ff9a92">never seen your experiment</b>.</p>
+  <svg class="ill" viewBox="0 0 900 230" style="max-width:820px; margin-top:1.2em" aria-label="a fast typist at a keyboard on the left; your experiment, unseen by it, on the right">
+    <!-- typist -->
+    <circle cx="150" cy="70" r="26" fill="none" stroke="#9ad39a" stroke-width="5"/>
+    <path d="M110 165 q40 -60 80 0" fill="none" stroke="#9ad39a" stroke-width="5"/>
+    <rect x="60" y="165" width="180" height="26" rx="6" fill="#9ad39a"/>
+    <g stroke="#9ad39a" stroke-width="4" stroke-linecap="round">
+      <line x1="255" y1="120" x2="300" y2="112"/><line x1="255" y1="140" x2="310" y2="140"/><line x1="255" y1="160" x2="300" y2="168"/>
+    </g>
+    <text x="150" y="222" font-size="22" fill="#9ad39a" text-anchor="middle" font-weight="700">a very fast typist</text>
+    <!-- wall -->
+    <line x1="450" y1="20" x2="450" y2="200" stroke="#555" stroke-width="3" stroke-dasharray="10 10"/>
+    <text x="450" y="222" font-size="18" fill="#8a8f98" text-anchor="middle">cannot see across</text>
+    <!-- experiment -->
+    <path d="M680 40 h60 v50 l45 85 q8 20 -12 20 h-126 q-20 0 -12 -20 l45 -85 z" fill="none" stroke="#ff9a92" stroke-width="5"/>
+    <text x="710" y="150" font-size="52" fill="#ff9a92" text-anchor="middle" font-weight="700">?</text>
+    <text x="710" y="222" font-size="22" fill="#ff9a92" text-anchor="middle" font-weight="700">your experiment</text>
+  </svg>
+</section>
+
+<!-- ===================================================================== -->
+<!-- 0. SET UP  (moved to the front: the room needs working keyboards     -->
+<!--    before it needs ethics, and setup always takes longer than 10 min)-->
+<!-- ===================================================================== -->
+
+<section class="divider" data-background-color="#f2f2ef">
+  <h1>0. Set up</h1>
+  <p class="when">SLIDES 4 – 7 · DO THIS FIRST · 17 SEPTEMBER</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>4 — Install it</h2>
+  <div class="term">
+<span class="u">$ curl -fsSL https://claude.ai/install.sh | bash</span>
+<span class="g">  → ~/.local/bin/claude</span>
+<span class="c">    no root · no Node.js · no package manager · nothing outside your home</span>
+  </div>
+  <div class="flow" style="margin-top:.55em">
+    <span class="b cool">on kl-004<br><span class="tiny">now, ~1 minute</span></span>
+    <span class="ar">same line</span>
+    <span class="b cool">on your laptop<br><span class="tiny">tonight, if you like</span></span>
+    <span class="ar">same line</span>
+    <span class="b cool">any Linux / macOS</span>
+  </div>
+
+  <p class="small" style="margin-top:.55em"><b>Getting to kl-004 first</b> — two hops,
+     from a terminal on your own machine:</p>
+  <div class="term">
+<span class="u">$ ssh username@fgcz-genomics.uzh.ch</span>
+<span class="u">$ ssh fgcz-kl-004</span>
+  </div>
+  <p class="small"><code>username</code> is the same as your <b>B-Fabric account</b>.
+     kl-004 only exists inside the FGCZ subnetwork, which is why there are two hops.</p>
+  <p class="src">claude.ai/install.sh · code.claude.com/docs</p>
+</section>
+
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>5 — Setting up your key</h2>
+  <p class="small">You are given a number. In this example it is <code>03</code>.</p>
+
+  <div class="term">
+<span class="u">$ umask 077</span>                                      <span class="c"># new files: you only</span>
+<span class="u">$ cp /scratch/EEE338_2026/keys/03 ~/.eee338_key</span>   <span class="c"># your own copy</span>
+<span class="u">$ touch /scratch/EEE338_2026/keys_done/03</span>         <span class="c"># tells me you have it</span>
+<span class="u">$ source ~/.eee338_key</span>                             <span class="c"># once per login</span>
+  </div>
+
+  <div class="flow" style="margin-top:.55em">
+    <span class="b cool">keys/03<br><span class="tiny">only you can read it</span></span>
+    <span class="ar">copy once →</span>
+    <span class="b" style="border-color:var(--ok); color:var(--ok)">~/.eee338_key<br><span class="tiny">your working copy</span></span>
+    <span class="ar">then →</span>
+    <span class="b">I delete<br><span class="tiny">the shared copy</span></span>
+  </div>
+
+  <ul class="small" style="margin-top:.45em">
+    <li><code>source</code> it <b>once per login</b>. Deliberately not in <code>.bashrc</code> —
+        you should notice that you are handling a credential.</li>
+    <li>You never type the key. That is the whole reason you copy a file instead.</li>
+    <li>Never put it in a script, a log, <code>ai_log.md</code>, or anything you hand in.
+        If it leaks: <b>tell the lecturer</b>, and it is revoked.</li>
+  </ul>
+  <p class="small dim">All ten keys are revoked on 24 September.</p>
+</section>
+
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>6 — The very first run: three prompts, one trap</h2>
+  <div class="term">
+<span class="u">$ cd /scratch/EEE338_2026/your_name</span>
+<span class="u">$ claude</span>
+  </div>
+
+  <div class="flow" style="margin-top:.5em">
+    <span class="b">1 &middot; text style<br><span class="tiny">any one. Enter</span></span>
+    <span class="ar">&rarr;</span>
+    <span class="b hot">2 &middot; &ldquo;use this API key?&rdquo;<br><span class="tiny"><b>&uarr; to Yes</b>, then Enter</span></span>
+    <span class="ar">&rarr;</span>
+    <span class="b">3 &middot; security notes<br><span class="tiny">read them. Enter</span></span>
+  </div>
+
+  <div class="trap"><span class="lab">prompt 2 &mdash; the cursor starts on No</span>
+    <div class="term" style="font-size:.5em; margin:.3em 0 .4em">
+Detected a custom API key in your environment
+ANTHROPIC_API_KEY: sk-ant-...VAAA
+Do you want to use this API key?
+
+    Yes
+<span class="r">  &#10095; No (recommended)</span>      &larr; Enter here = no key, no session
+    </div>
+    Press <kbd>&uarr;</kbd> to move to <b>Yes</b> first, then <kbd>Enter</kbd>.
+    &ldquo;Recommended&rdquo; is generic advice for people who did not put the key there
+    on purpose. You did.</div>
+
+  <p class="small" style="margin-top:.4em">Asked <b>once</b>; the answer is remembered.
+     If you said No by mistake: quit, and run <code>claude</code> again.</p>
+  <p class="src">Captured on fgcz-kl-004, 9 Sep 2026, Claude Code v2.1.266</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>7 — Every run after that: the banner</h2>
+  <div class="term">
+<span class="u">$ claude</span>
+
+<span class="g"> ▐▛███▛█   Claude Code v2.1.266</span>
+<span class="g">▝▜██████▀  Sonnet 5 with medium effort · API Usage Billing</span>
+<span class="g">  ▝▝ ▝▝    /scratch/EEE338_2026/your_name</span>
+
+<span class="u">&gt; </span>
+  </div>
+
+  <table style="margin-top:.45em">
+    <tr><th style="width:34%">Line</th><th>Check this before you type anything</th></tr>
+    <tr><td><code>Sonnet 5 … medium</code></td>
+        <td>the model, and how hard it thinks. Set once with <code>/model</code> and <code>/effort</code></td></tr>
+    <tr><td><code>API Usage Billing</code></td>
+        <td>your key was found. Anything else here means <code>source</code> did not work</td></tr>
+    <tr class="hi"><td>the path</td>
+        <td><b>your own</b> directory. The agent sees where you started it, and nothing above</td></tr>
+  </table>
+  <div class="spine key fragment">Starting it in the wrong directory is the most common first mistake.</div>
+</section>
+
+<!-- ===================================================================== -->
+<!-- 1. ETHICS                                                             -->
+<!-- ===================================================================== -->
+
+<section class="divider" data-background-color="#f2f2ef">
+  <h1>1. The rules<br>that bind you</h1>
+  <p class="when">SLIDES 8 – 15 · 17 SEPTEMBER</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>8 — What every journal already says</h2>
+  <ol>
+    <li><b>AI cannot be an author.</b></li>
+    <li><b>Non-trivial use must be disclosed</b> — in methods or acknowledgements.</li>
+    <li><b>The humans are fully responsible</b> for everything in the paper.</li>
+  </ol>
+  <p class="small" style="margin-top:.7em">Nature's reason for rule 1 is worth
+     remembering, because it is not about quality:</p>
+  <div class="spine key fragment">Authorship carries <b>accountability</b>, and a language model
+    cannot be held accountable. So it cannot be an author.</div>
+  <p class="tiny" style="margin-top:.5em">Nature, Science, Cell, PLOS, Elsevier and
+     the ICMJE all say versions of the same three rules.</p>
+  <p class="src">nature.com/nature-portfolio/editorial-policies/ai ·
+     icmje.org/recommendations · publicationethics.org (COPE position statement)</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>9 — UZH: the rule that binds you</h2>
+  <p>UZH, <i>Recommendations on the use of generative AI at UZH</i>, principle 5:</p>
+  <div class="trap"><span class="lab">binding on you, today</span>
+    “Any use of generative AI tools <b>must always be indicated</b>.”</div>
+  <div style="display:grid; grid-template-columns:1fr 44%; gap:1em; align-items:start;
+              margin-top:.55em">
+    <div>
+      <p class="small" style="margin:0">The university sets the principle; each faculty
+         sets the binding specifics for its own exams and theses.
+         <b>Check your own programme's rules before your thesis</b> — they are stricter
+         than this course.</p>
+      <p class="small dim" style="margin-top:.5em">It is one page, and it is the page you
+         will be held to. Read it once, today.</p>
+    </div>
+    <img src="img/S11.jpg" style="width:100%; max-height:300px; object-fit:contain;
+         border:1px solid var(--rule); border-radius:4px"
+         alt="the UZH page listing the recommendations on the use of generative AI">
+  </div>
+  <p class="src">UZH, <i>Recommendations on the use of generative AI at UZH</i>,
+     uzh.ch/en/explore/basics/ai/recommendations.html · quoted verbatim, retrieved 13 Sep 2026 ·
+     the sanctions behind it: UZH Disziplinarverordnung and Integritätsverordnung</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>10 — UZH has already classified these tools</h2>
+  <table>
+    <tr><th>Tool UZH provides</th><th style="width:29%">Approved for</th><th style="width:25%">Where it runs</th></tr>
+    <tr><td>LM Studio + Mistral</td><td>all levels</td><td>on your own device</td></tr>
+    <tr><td>M365 Copilot (Premium)</td><td>public, internal, confidential</td><td>Cloud EU</td></tr>
+    <tr><td>DeepL Pro Advanced</td><td>all levels</td><td>Cloud EU</td></tr>
+    <tr><td>GitHub Copilot</td><td>public, internal</td><td>worldwide</td></tr>
+    <tr class="hi"><td><b>Claude / Claude Code</b>
+        <br><span class="tiny">still under evaluation</span></td>
+        <td><b>public data only</b></td><td>—</td></tr>
+  </table>
+
+  <div class="flow">
+    <span class="b" style="border-color:var(--ok); color:var(--ok)">on device</span><span class="ar">›</span>
+    <span class="b cool">Cloud EU</span><span class="ar">›</span>
+    <span class="b hot">worldwide</span>
+    <span class="tiny" style="margin-left:.6em">more places your text can end up →
+      fewer data classes allowed</span>
+  </div>
+
+  <div class="spine key fragment">The permission tracks <b>where your text goes</b>,
+    not how good the model is.</div>
+  <p class="src">UZH Central IT, “AI Tools and Services”,
+     zi.uzh.ch/en/staff/software-elearning/AI-Tools-and-Services-.html · retrieved 9 Sep 2026</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>11 — Classify the data before it touches AI</h2>
+  <table>
+    <tr><th style="width:18%">Class</th><th style="width:40%">Example</th><th>May it go to an external model?</th></tr>
+    <tr class="ok"><td><b>Public</b></td><td>published sequence in DDBJ / ENA / SRA;
+        a released genome</td><td><b>Yes.</b> This course.</td></tr>
+    <tr><td><b>Internal</b></td><td>unpublished lab data, a manuscript in preparation</td>
+        <td>Only under an institutional contract; ask the lecturer or your PI</td></tr>
+    <tr class="hi"><td><b>Confidential</b></td><td>data under an MTA or a collaboration
+        agreement</td><td><b>No</b> — you would be breaking a contract</td></tr>
+    <tr class="hi"><td><b>Sensitive</b></td><td>human / patient genomes, clinical records</td>
+        <td><b>No.</b> Legally regulated. Different rules entirely</td></tr>
+  </table>
+  <div class="spine key fragment">Do the classification <b>before</b> you open the terminal, not after.</div>
+  <p class="src">Structure follows the UZH information classification directive
+     (<i>Weisung zur Klassifizierung von Informationen</i>, rud.uzh.ch, in German) and the
+     UZH AI Guidelines, informationsecurity.uzh.ch/en/regulations/information-security-guidelines.html</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>12 — Caution 1: hallucination</h2>
+  <p>Fluent, confident, and wrong. In this course it will invent:</p>
+  <div class="three small">
+    <div><b>Paths</b><br><code>/scratch/EEE338_2026/data/genome.fa</code>
+      <br><span class="tiny">plausible. does not exist.</span></div>
+    <div><b>Options</b><br><code>--strandness reverse</code>
+      <br><span class="tiny">reads like a real STAR flag. is not one.</span></div>
+    <div><b>Gene IDs</b><br><code>AT2G19100</code>
+      <br><span class="tiny">HMA4 is AT2G19<b>11</b>0. One digit.</span></div>
+  </div>
+  <div class="term" style="margin-top:.6em; font-size:.5em">
+<span class="c"># kl-004, 9 Sep 2026, no CLAUDE.md. Every line below is confident. Every marked one is wrong here.</span>
+<span class="u">&gt; How do I run FastQC on this server?</span>
+<span class="g">If not installed, common options:</span>
+<span class="r">  conda install -c bioconda fastqc</span>        <span class="c">← read-only env; fails</span>
+<span class="r">  sudo apt install fastqc</span>                  <span class="c">← no root; fails</span>
+<span class="g">Running it:</span>
+<span class="r">  fastqc *.fastq.gz -o out/ -t 4</span>           <span class="c">← files are .fastq; 4 threads on a shared node</span>
+  </div>
+  <div class="spine key fragment">The failure mode is not that it is unsure. It is that it is
+    <b>fluent while being wrong</b> &mdash; and fluency is what you use to judge people.</div>
+  <p class="src">Transcript captured on fgcz-kl-004, 9 Sep 2026, claude-sonnet-5. Guessing beats
+     abstaining across the board: of the 36 models in the AA-Omniscience benchmark, the most
+     reticent still attempted 42 % of questions and every other model attempted at least 65 %
+     &mdash; Artificial Analysis, arXiv:2511.13029 · leaderboard: artificialanalysis.ai/evaluations/omniscience</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>13 — Caution 2: workslop</h2>
+  <p><b>Workslop</b>: output that has the shape of finished work and none of the substance.
+     Well formatted, correct-sounding, empty.</p>
+  <div class="trap"><span class="lab">the cost does not disappear</span>
+    It <b>moves</b> — to whoever receives it, who must now check every line to find
+    out whether there is anything in it. Sometimes called a <i>meat proxy</i>:
+    a person is spending real attention on something no person attended to.</div>
+  <div class="figs" style="margin-top:.5em">
+    <div class="fig bad"><span class="cap">have been sent workslop</span>
+      <span class="num">41<span class="unit"> %</span></span></div>
+    <div class="fig bad"><span class="cap">spent undoing each instance</span>
+      <span class="num">1 h 56<span class="unit"> min</span></span></div>
+  </div>
+  <div class="spine" style="margin-top:.5em">Our own case: the final practice.
+    <b>Ten people write results into one shared directory</b>, and then read each
+    other's. If your part is workslop, nine people pay for it.</div>
+  <p class="src">Niederhoffer, Rosen Kellerman, Lee, Liebscher, Rapuano &amp; Hancock,
+     “AI-Generated ‘Workslop’ Is Destroying Productivity”, <i>Harvard Business Review</i>,
+     22 Sep 2025 · figures from their survey of US desk workers, run by BetterUp Labs with the
+     Stanford Social Media Lab · hbr.org/2025/09/ai-generated-workslop-is-destroying-productivity</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>14 — Caution 3: brain-fry</h2>
+  <div style="display:grid; grid-template-columns:38% 1fr; gap:1em; align-items:start">
+    <div>
+      <img src="img/brain_fry_techflowpost_20260331.png"
+           alt="How many AI tools is too many? Self-rated productivity by number of AI tools used at once: rises from 1 to 3 tools, falls at 4 or more"
+           style="width:100%; border:1px solid var(--rule); border-radius:4px">
+    </div>
+    <div>
+      <p class="small">1,488 full-time workers, asked how many AI tools they run
+         <b>at once</b>, and whether AI has made them more productive.</p>
+      <div class="barrow"><span>1 tool</span><span class="track"><i class="bar grey" style="width:33%"></i></span><span class="tiny">3.3</span></div>
+      <div class="barrow"><span>2</span><span class="track"><i class="bar" style="width:75%"></i></span><span class="tiny">3.75</span></div>
+      <div class="barrow"><span>3</span><span class="track"><i class="bar ok" style="width:100%"></i></span><span class="tiny"><b>4.0</b> &larr; peak</span></div>
+      <div class="barrow"><span><b>4 or more</b></span><span class="track"><i class="bar hot" style="width:65%"></i></span><span class="tiny">3.65</span></div>
+      <p class="tiny">agreement with &ldquo;my productivity has increased because of AI&rdquo;, scale 1&ndash;5</p>
+
+      <div class="trap" style="margin-top:.4em"><span class="lab">what the study calls AI brain fry</span>
+        Mental fatigue from running, reading and supervising more AI output than you
+        can hold in your head. <b>14 %</b> of AI users at large US firms report it,
+        with more serious errors and more wanting to quit.</div>
+    </div>
+  </div>
+  <p class="src">Chart and data: Bedard, Kropp, Hsu (BCG), Karaman, Hawes (UC Riverside), Kellerman (BCG),
+     &ldquo;When Using AI Leads to &lsquo;Brain Fry&rsquo;&rdquo;, <i>Harvard Business Review</i>, 5 Mar 2026,
+     hbr.org/2026/03/when-using-ai-leads-to-brain-fry &middot; BCG survey of 1,488 full-time U.S. workers, Jan 2026
+     &middot; image via techflowpost.com/en-US/article/30925 (31 Mar 2026)</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>15 — What you must declare</h2>
+  <p>Keep <code>ai_log.md</code> in your working directory. <b>Four lines per task:</b></p>
+  <div class="term">
+<span class="g">## 2026-09-22  STAR mapping of ALK_L_Z</span>
+<span class="g">asked   : write a STAR command for a single-end fastq against the TAIR10 index</span>
+<span class="g">got     : correct, but omitted --outSAMstrandField intronMotif</span>
+<span class="g">checked : compared with the flags in the Mapping practical;</span>
+<span class="g">          StringTie would have failed later</span>
+<span class="g">fixed   : added the flag by hand, reran</span>
+  </div>
+
+  <div class="two" style="margin-top:.5em">
+    <div><h3>Required</h3>
+      <p class="small">That you <b>say</b> you used it, and what you checked.
+        Slide 8 (journals) and slide 9 (UZH) both demand it.</p></div>
+    <div><h3>Not graded</h3>
+      <p class="small"><b>How</b> you use AI is not assessed and not examined.
+        There is no mark for using it a lot, or for using it well.</p></div>
+  </div>
+
+  <div class="trap" style="margin-top:.4em"><span class="lab">tip &mdash; let the agent keep the log</span>
+    Your first message of every session:<br>
+    <code>keep ai_log.md up to date: after each task, append asked / got / checked / fixed</code><br>
+    <span class="tiny">CLAUDE.md already tells it to. Saying it once more makes it reliable.
+    You still write the <code>checked</code> line yourself &mdash; it cannot know what you checked.</span></div>
+</section>
+
+<!-- ===================================================================== -->
+<!-- 2. THE TOOLS                                                          -->
+<!-- ===================================================================== -->
+
+<section class="divider" data-background-color="#f2f2ef">
+  <h1>2. The tools</h1>
+  <p class="when">SLIDES 16 – 23 · 17 SEPTEMBER</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>16 &mdash; What is an LLM?</h2>
+  <p class="small">A <b>neural network</b>: a very large function. Numbers go in on the left,
+     numbers come out on the right, and <b>every line in between carries one number of its own</b>.</p>
+
+  <svg class="ill" viewBox="0 0 960 384" style="max-width:1090px" aria-label="the text so far goes into a network of four layers of units joined by weighted lines, and out comes a list of candidate next words with probabilities; an arrow loops the chosen word back to the input">
+    <rect x="20" y="118" width="210" height="100" rx="10" fill="#f2f2ef" stroke="#8a8f98" stroke-width="3"/>
+    <text x="125" y="152" font-size="20" text-anchor="middle" fill="#666">the text so far</text>
+    <text x="125" y="182" font-size="17" text-anchor="middle" fill="#8a8f98" font-family="Menlo,monospace">...reported</text>
+    <text x="125" y="204" font-size="17" text-anchor="middle" fill="#8a8f98" font-family="Menlo,monospace">76.58</text>
+
+    <line x1="300" y1="114" x2="390" y2="96" stroke="#1b5e9e" stroke-width="1.5" opacity="0.2"/>
+    <line x1="300" y1="114" x2="390" y2="132" stroke="#1b5e9e" stroke-width="2.5" opacity="0.15"/>
+    <line x1="300" y1="114" x2="390" y2="168" stroke="#1b5e9e" stroke-width="1" opacity="0.7"/>
+    <line x1="300" y1="114" x2="390" y2="204" stroke="#1b5e9e" stroke-width="1" opacity="0.3"/>
+    <line x1="300" y1="114" x2="390" y2="240" stroke="#1b5e9e" stroke-width="3.5" opacity="0.15"/>
+    <line x1="300" y1="150" x2="390" y2="96" stroke="#1b5e9e" stroke-width="3.5" opacity="0.2"/>
+    <line x1="300" y1="150" x2="390" y2="132" stroke="#1b5e9e" stroke-width="1" opacity="0.15"/>
+    <line x1="300" y1="150" x2="390" y2="168" stroke="#1b5e9e" stroke-width="2.5" opacity="0.5"/>
+    <line x1="300" y1="150" x2="390" y2="204" stroke="#1b5e9e" stroke-width="1" opacity="0.2"/>
+    <line x1="300" y1="150" x2="390" y2="240" stroke="#1b5e9e" stroke-width="1" opacity="0.7"/>
+    <line x1="300" y1="186" x2="390" y2="96" stroke="#1b5e9e" stroke-width="2.5" opacity="0.15"/>
+    <line x1="300" y1="186" x2="390" y2="132" stroke="#1b5e9e" stroke-width="3.5" opacity="0.15"/>
+    <line x1="300" y1="186" x2="390" y2="168" stroke="#1b5e9e" stroke-width="1" opacity="0.7"/>
+    <line x1="300" y1="186" x2="390" y2="204" stroke="#1b5e9e" stroke-width="1" opacity="0.7"/>
+    <line x1="300" y1="186" x2="390" y2="240" stroke="#1b5e9e" stroke-width="3.5" opacity="0.5"/>
+    <line x1="300" y1="222" x2="390" y2="96" stroke="#1b5e9e" stroke-width="1" opacity="0.2"/>
+    <line x1="300" y1="222" x2="390" y2="132" stroke="#1b5e9e" stroke-width="1" opacity="0.7"/>
+    <line x1="300" y1="222" x2="390" y2="168" stroke="#1b5e9e" stroke-width="1" opacity="0.3"/>
+    <line x1="300" y1="222" x2="390" y2="204" stroke="#1b5e9e" stroke-width="2.5" opacity="0.2"/>
+    <line x1="300" y1="222" x2="390" y2="240" stroke="#1b5e9e" stroke-width="3.5" opacity="0.15"/>
+    <line x1="390" y1="96" x2="480" y2="96" stroke="#1b5e9e" stroke-width="3.5" opacity="0.3"/>
+    <line x1="390" y1="96" x2="480" y2="132" stroke="#1b5e9e" stroke-width="3.5" opacity="0.2"/>
+    <line x1="390" y1="96" x2="480" y2="168" stroke="#1b5e9e" stroke-width="1" opacity="0.7"/>
+    <line x1="390" y1="96" x2="480" y2="204" stroke="#1b5e9e" stroke-width="3.5" opacity="0.2"/>
+    <line x1="390" y1="96" x2="480" y2="240" stroke="#1b5e9e" stroke-width="1.5" opacity="0.15"/>
+    <line x1="390" y1="132" x2="480" y2="96" stroke="#1b5e9e" stroke-width="3.5" opacity="0.15"/>
+    <line x1="390" y1="132" x2="480" y2="132" stroke="#1b5e9e" stroke-width="3.5" opacity="0.15"/>
+    <line x1="390" y1="132" x2="480" y2="168" stroke="#1b5e9e" stroke-width="3.5" opacity="0.2"/>
+    <line x1="390" y1="132" x2="480" y2="204" stroke="#1b5e9e" stroke-width="2.5" opacity="0.7"/>
+    <line x1="390" y1="132" x2="480" y2="240" stroke="#1b5e9e" stroke-width="2.5" opacity="0.3"/>
+    <line x1="390" y1="168" x2="480" y2="96" stroke="#1b5e9e" stroke-width="2.5" opacity="0.7"/>
+    <line x1="390" y1="168" x2="480" y2="132" stroke="#1b5e9e" stroke-width="2.5" opacity="0.3"/>
+    <line x1="390" y1="168" x2="480" y2="168" stroke="#1b5e9e" stroke-width="1.5" opacity="0.2"/>
+    <line x1="390" y1="168" x2="480" y2="204" stroke="#1b5e9e" stroke-width="1" opacity="0.2"/>
+    <line x1="390" y1="168" x2="480" y2="240" stroke="#1b5e9e" stroke-width="1" opacity="0.7"/>
+    <line x1="390" y1="204" x2="480" y2="96" stroke="#1b5e9e" stroke-width="1.5" opacity="0.7"/>
+    <line x1="390" y1="204" x2="480" y2="132" stroke="#1b5e9e" stroke-width="2.5" opacity="0.3"/>
+    <line x1="390" y1="204" x2="480" y2="168" stroke="#1b5e9e" stroke-width="2.5" opacity="0.3"/>
+    <line x1="390" y1="204" x2="480" y2="204" stroke="#1b5e9e" stroke-width="3.5" opacity="0.15"/>
+    <line x1="390" y1="204" x2="480" y2="240" stroke="#1b5e9e" stroke-width="1" opacity="0.7"/>
+    <line x1="390" y1="240" x2="480" y2="96" stroke="#1b5e9e" stroke-width="2.5" opacity="0.2"/>
+    <line x1="390" y1="240" x2="480" y2="132" stroke="#1b5e9e" stroke-width="1.5" opacity="0.2"/>
+    <line x1="390" y1="240" x2="480" y2="168" stroke="#1b5e9e" stroke-width="2.5" opacity="0.5"/>
+    <line x1="390" y1="240" x2="480" y2="204" stroke="#1b5e9e" stroke-width="1" opacity="0.15"/>
+    <line x1="390" y1="240" x2="480" y2="240" stroke="#1b5e9e" stroke-width="3.5" opacity="0.7"/>
+    <line x1="480" y1="96" x2="565" y2="132" stroke="#1b5e9e" stroke-width="1.5" opacity="0.3"/>
+    <line x1="480" y1="96" x2="565" y2="168" stroke="#1b5e9e" stroke-width="1.5" opacity="0.7"/>
+    <line x1="480" y1="96" x2="565" y2="204" stroke="#1b5e9e" stroke-width="2.5" opacity="0.7"/>
+    <line x1="480" y1="132" x2="565" y2="132" stroke="#1b5e9e" stroke-width="2.5" opacity="0.15"/>
+    <line x1="480" y1="132" x2="565" y2="168" stroke="#1b5e9e" stroke-width="1" opacity="0.3"/>
+    <line x1="480" y1="132" x2="565" y2="204" stroke="#1b5e9e" stroke-width="2.5" opacity="0.15"/>
+    <line x1="480" y1="168" x2="565" y2="132" stroke="#1b5e9e" stroke-width="1" opacity="0.3"/>
+    <line x1="480" y1="168" x2="565" y2="168" stroke="#1b5e9e" stroke-width="3.5" opacity="0.5"/>
+    <line x1="480" y1="168" x2="565" y2="204" stroke="#1b5e9e" stroke-width="1.5" opacity="0.5"/>
+    <line x1="480" y1="204" x2="565" y2="132" stroke="#1b5e9e" stroke-width="1.5" opacity="0.15"/>
+    <line x1="480" y1="204" x2="565" y2="168" stroke="#1b5e9e" stroke-width="2.5" opacity="0.3"/>
+    <line x1="480" y1="204" x2="565" y2="204" stroke="#1b5e9e" stroke-width="1" opacity="0.7"/>
+    <line x1="480" y1="240" x2="565" y2="132" stroke="#1b5e9e" stroke-width="1" opacity="0.5"/>
+    <line x1="480" y1="240" x2="565" y2="168" stroke="#1b5e9e" stroke-width="1" opacity="0.2"/>
+    <line x1="480" y1="240" x2="565" y2="204" stroke="#1b5e9e" stroke-width="1.5" opacity="0.2"/>
+    <circle cx="300" cy="114" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="300" cy="150" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="300" cy="186" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="300" cy="222" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="390" cy="96" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="390" cy="132" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="390" cy="168" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="390" cy="204" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="390" cy="240" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="480" cy="96" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="480" cy="132" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="480" cy="168" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="480" cy="204" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="480" cy="240" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="565" cy="132" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="565" cy="168" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <circle cx="565" cy="204" r="11" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+
+    <text x="432" y="58" font-size="20" text-anchor="middle" fill="#1b5e9e" font-weight="700">the network</text>
+    <text x="432" y="82" font-size="16" text-anchor="middle" fill="#666">each line has a <tspan font-weight="700">weight</tspan> &mdash; one number. There are billions.</text>
+
+    <rect x="700" y="108" width="240" height="120" rx="10" fill="#f2f8f3" stroke="#2e6f40" stroke-width="3"/>
+    <text x="820" y="136" font-size="18" text-anchor="middle" fill="#2e6f40" font-weight="700">what comes next</text>
+    <text x="722" y="170" font-size="21" fill="#1b1b1b" font-family="Menlo,monospace">%</text>
+    <text x="918" y="170" font-size="21" text-anchor="end" fill="#2e6f40" font-weight="700">0.91</text>
+    <text x="722" y="200" font-size="18" fill="#8a8f98" font-family="Menlo,monospace">percent</text>
+    <text x="918" y="200" font-size="18" text-anchor="end" fill="#8a8f98">0.04</text>
+
+    <path d="M232 168 H288" stroke="#1b1b1b" stroke-width="4" marker-end="url(#na)"/>
+    <path d="M578 168 H692" stroke="#1b1b1b" stroke-width="4" marker-end="url(#na)"/>
+    <path d="M820 236 V286 H125 V226" stroke="#b3261e" stroke-width="4" fill="none" marker-end="url(#nr)"/>
+    <text x="470" y="278" font-size="18" text-anchor="middle" fill="#b3261e" font-weight="700">pick one, stick it on the end, run the whole thing again</text>
+
+    <text x="20" y="328" font-size="17" fill="#666"><tspan font-weight="700" fill="#1b5e9e">Training</tspan> is nothing but this: show it text, see what it guessed, and nudge every one of those</text>
+    <text x="20" y="354" font-size="17" fill="#666">billions of numbers so the guess gets better. Nobody sets them by hand, and nobody can read them after.</text>
+
+    <defs>
+      <marker id="na" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1b1b1b"/></marker>
+      <marker id="nr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#b3261e"/></marker>
+    </defs>
+  </svg>
+
+  <div class="spine key fragment">The whole job is <b>guess the next word, then do it again</b>.
+    Everything that looks like reasoning is built out of that.</div>
+  <p class="src">this is the shape of every current model &middot; the particular shape is on the next slide</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>17 &mdash; Transformer, and self-attention</h2>
+  <p class="small">All of them use the same shape of network, invented in 2017 and called a
+     <b>transformer</b>. It is the same small block, stacked dozens of times.</p>
+
+  <svg class="ill" viewBox="0 0 960 412" style="max-width:1035px" aria-label="top: one transformer block is a self-attention step followed by an ordinary layer, and the block is repeated dozens of times. bottom: in self-attention the word it asks every other word how much it matters, and leans most heavily on STAR">
+    <rect x="20" y="30" width="150" height="76" rx="10" fill="#f2f2ef" stroke="#8a8f98" stroke-width="3"/>
+    <text x="95" y="62" font-size="18" text-anchor="middle" fill="#666">all the words,</text>
+    <text x="95" y="86" font-size="18" text-anchor="middle" fill="#666">all at once</text>
+
+    <rect x="232" y="22" width="238" height="92" rx="10" fill="#e8f0f8" stroke="#1b5e9e" stroke-width="4"/>
+    <text x="351" y="54" font-size="21" text-anchor="middle" fill="#1b5e9e" font-weight="700">self-attention</text>
+    <text x="351" y="80" font-size="16" text-anchor="middle" fill="#1b5e9e">every word looks at</text>
+    <text x="351" y="100" font-size="16" text-anchor="middle" fill="#1b5e9e">every other word</text>
+
+    <rect x="522" y="22" width="200" height="92" rx="10" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <text x="622" y="60" font-size="19" text-anchor="middle" font-weight="700">an ordinary</text>
+    <text x="622" y="84" font-size="19" text-anchor="middle" font-weight="700">layer</text>
+
+    <rect x="790" y="30" width="150" height="76" rx="10" fill="#f2f8f3" stroke="#2e6f40" stroke-width="3"/>
+    <text x="865" y="62" font-size="18" text-anchor="middle" fill="#2e6f40">the next</text>
+    <text x="865" y="86" font-size="18" text-anchor="middle" fill="#2e6f40">word</text>
+
+    <path d="M172 68 H224" stroke="#1b1b1b" stroke-width="4" marker-end="url(#ta)"/>
+    <path d="M472 68 H514" stroke="#1b1b1b" stroke-width="4" marker-end="url(#ta)"/>
+    <path d="M724 68 H782" stroke="#1b1b1b" stroke-width="4" marker-end="url(#ta)"/>
+    <path d="M622 122 V146 H351 V122" stroke="#1b5e9e" stroke-width="3.5" fill="none" stroke-dasharray="9 6" marker-end="url(#tb)"/>
+    <text x="486" y="168" font-size="17" text-anchor="middle" fill="#1b5e9e" font-weight="700">one block &mdash; and the block is repeated dozens of times</text>
+
+    <line x1="20" y1="192" x2="940" y2="192" stroke="#d8d8d8" stroke-width="2"/>
+    <text x="20" y="220" font-size="19" fill="#1b5e9e" font-weight="700">inside the blue box &mdash; this is what <tspan font-style="italic">attention</tspan> means</text>
+    <text x="20" y="246" font-size="17" fill="#666">Each word asks every other word <tspan font-style="italic">how much do you matter to me?</tspan> and mixes in the answers it gets.</text>
+
+    <path d="M404 296 C 380 238, 100 238, 78 292"  stroke="#1b5e9e" stroke-width="8" fill="none" opacity=".95"/>
+    <path d="M404 296 C 392 250, 222 250, 198 292" stroke="#1b5e9e" stroke-width="3.5" fill="none" opacity=".45"/>
+    <path d="M416 296 C 464 258, 566 258, 606 292" stroke="#1b5e9e" stroke-width="2.5" fill="none" opacity=".3"/>
+
+    <text x="60"  y="324" font-size="30" font-family="Menlo,monospace" font-weight="700">STAR</text>
+    <text x="152" y="324" font-size="30" font-family="Menlo,monospace">finished, and</text>
+    <text x="392" y="324" font-size="30" font-family="Menlo,monospace" font-weight="700" fill="#b3261e">it</text>
+    <text x="436" y="324" font-size="30" font-family="Menlo,monospace">reported</text>
+    <text x="606" y="324" font-size="30" font-family="Menlo,monospace">76.58</text>
+
+    <text x="20" y="362" font-size="17" fill="#666">The thick line is the one <tspan fill="#b3261e" font-weight="700">it</tspan> leans on, so <tspan fill="#b3261e" font-weight="700">it</tspan> comes to mean <tspan font-weight="700">STAR</tspan> &mdash; that is where the word looks.</text>
+    <text x="20" y="388" font-size="17" fill="#666"><tspan font-weight="700">Nobody wrote that rule.</tspan> It fell out of the weights, from an enormous amount of text.</text>
+
+    <defs>
+      <marker id="ta" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1b1b1b"/></marker>
+      <marker id="tb" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#1b5e9e"/></marker>
+    </defs>
+  </svg>
+
+  <div class="spine key fragment">Before 2017 a network read a sentence one word at a time.
+    A transformer sees <b>all of it at once</b> &mdash; and that is why a long session costs more.</div>
+  <p class="src">Vaswani et al., &ldquo;Attention Is All You Need&rdquo;, <b>NeurIPS 2017</b> &mdash;
+     peer-reviewed proceedings, not a preprint; in machine learning the conference is the venue of
+     record &middot; among the <b>ten most-cited papers of this century</b> (Nature, counted across five
+     databases, Apr 2025) &middot; attention itself is older &mdash; Bahdanau, Cho &amp; Bengio 2014;
+     what this paper removed was the recurrence, which is what the title is claiming</p>
+</section>
+
+
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>18 — An LLM is not an agent</h2>
+  <div class="two">
+    <div>
+      <h3>Language model</h3>
+      <p class="small">Text in, text out. It cannot open a file, run a command,
+         or find out whether it was right.</p>
+      <p class="small dim">ChatGPT in a browser, mostly this.</p>
+    </div>
+    <div>
+      <h3>Agent = model + harness</h3>
+      <p class="small">A program around the model that lets it
+        <b>run commands, read the output, edit files, and try again</b>.</p>
+      <p class="small dim">Claude Code, Codex, Copilot CLI, Gemini CLI.</p>
+    </div>
+  </div>
+  <svg class="ill" viewBox="0 0 900 250" style="max-width:860px" aria-label="the model sits inside a harness; the harness runs bash, read and edit on the machine, and feeds the real output back to the model">
+    <rect x="20" y="20" width="560" height="210" rx="14" fill="none" stroke="#1b5e9e" stroke-width="4" stroke-dasharray="12 8"/>
+    <text x="40" y="52" font-size="20" fill="#1b5e9e" font-weight="700">harness  (Claude Code)</text>
+    <rect x="60" y="90" width="170" height="80" rx="10" fill="#fff" stroke="#1b1b1b" stroke-width="4"/>
+    <text x="145" y="124" font-size="24" text-anchor="middle" font-weight="700">model</text>
+    <text x="145" y="150" font-size="16" text-anchor="middle" fill="#666">text in, text out</text>
+    <rect x="380" y="70" width="170" height="40" rx="8" fill="#f2f8f3" stroke="#2e6f40" stroke-width="3"/>
+    <text x="465" y="97" font-size="20" text-anchor="middle" fill="#2e6f40" font-family="Menlo,monospace">bash</text>
+    <rect x="380" y="118" width="170" height="40" rx="8" fill="#f2f8f3" stroke="#2e6f40" stroke-width="3"/>
+    <text x="465" y="145" font-size="20" text-anchor="middle" fill="#2e6f40" font-family="Menlo,monospace">read</text>
+    <rect x="380" y="166" width="170" height="40" rx="8" fill="#f2f8f3" stroke="#2e6f40" stroke-width="3"/>
+    <text x="465" y="193" font-size="20" text-anchor="middle" fill="#2e6f40" font-family="Menlo,monospace">edit</text>
+    <path d="M232 115 H372" stroke="#1b1b1b" stroke-width="4" marker-end="url(#ah)"/>
+    <text x="302" y="105" font-size="16" text-anchor="middle">asks for</text>
+    <path d="M372 190 H300 V160 H240" stroke="#b3261e" stroke-width="4" fill="none" marker-end="url(#ar)"/>
+    <text x="302" y="212" font-size="16" text-anchor="middle" fill="#b3261e" font-weight="700">the actual output</text>
+    <rect x="640" y="60" width="240" height="130" rx="12" fill="#f2f2ef" stroke="#8a8f98" stroke-width="3"/>
+    <text x="760" y="100" font-size="20" text-anchor="middle" fill="#666">fgcz-kl-004</text>
+    <text x="760" y="130" font-size="18" text-anchor="middle" fill="#666">your files</text>
+    <text x="760" y="158" font-size="18" text-anchor="middle" fill="#666">your data</text>
+    <path d="M552 125 H630" stroke="#2e6f40" stroke-width="4" marker-end="url(#ag)"/>
+    <defs>
+      <marker id="ah" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1b1b1b"/></marker>
+      <marker id="ar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#b3261e"/></marker>
+      <marker id="ag" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#2e6f40"/></marker>
+    </defs>
+  </svg>
+  <div class="spine key fragment">The loop back is the whole difference. An agent on the
+    <b>server</b> is not a chat window on your laptop.</div>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>19 — CLI agents, September 2026</h2>
+  <table>
+    <tr><th>Tool</th><th>From</th><th>Note</th></tr>
+    <tr class="ok"><td><b>Claude Code</b></td><td>Anthropic</td>
+        <td><b>the tool for this course</b></td></tr>
+    <tr><td>Codex CLI</td><td>OpenAI</td><td>same idea, different model</td></tr>
+    <tr><td>Copilot CLI</td><td>GitHub</td><td>tied to a GitHub account</td></tr>
+    <tr><td>Gemini CLI</td><td>Google</td><td>same idea again</td></tr>
+  </table>
+  <p class="small" style="margin-top:.6em">They are more alike than the marketing
+     suggests. <b>What you learn here transfers.</b> The 2025 version of this slide
+     is already wrong about every model name — that is the speed of this field, and
+     a reason to learn the shape rather than the product.</p>
+  <p class="small dim">How fast: Google's desktop app reached Windows on 10 September 2026.
+     That is one week before this lecture.</p>
+  <aside class="notes">Check the four product names still exist on the morning of 17 Sep.
+    If one has been renamed, say so out loud — it makes the point better than the slide does.</aside>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>20 — Claude Code: the tool for this course</h2>
+  <ul>
+    <li><b>In the terminal, on fgcz-kl-004, next to the data.</b>
+        No copying, no pasting, no uploading.</li>
+    <li>It can run <code>module load</code>, run STAR, read the log, see the error,
+        and fix its own command.</li>
+    <li><b>The course pays.</b> You are given an API key; it is revoked after the course.</li>
+  </ul>
+  <svg class="ill" viewBox="0 0 900 200" style="max-width:820px" aria-label="the agent runs inside the cluster next to the data; only text leaves the cluster to the API; you reach it over ssh">
+    <rect x="250" y="20" width="400" height="160" rx="14" fill="#f2f2ef" stroke="#1b1b1b" stroke-width="4"/>
+    <text x="450" y="50" font-size="20" text-anchor="middle" font-weight="700">fgcz-kl-004</text>
+    <rect x="280" y="75" width="150" height="80" rx="10" fill="#fff" stroke="#8a8f98" stroke-width="3"/>
+    <text x="355" y="110" font-size="20" text-anchor="middle" fill="#666">data</text>
+    <text x="355" y="136" font-size="15" text-anchor="middle" fill="#666">130 GB, stays here</text>
+    <rect x="470" y="75" width="150" height="80" rx="10" fill="#fff" stroke="#1b5e9e" stroke-width="4"/>
+    <text x="545" y="110" font-size="20" text-anchor="middle" fill="#1b5e9e" font-weight="700">agent</text>
+    <text x="545" y="136" font-size="15" text-anchor="middle" fill="#1b5e9e">reads, runs, retries</text>
+    <path d="M432 115 H466" stroke="#1b5e9e" stroke-width="4" marker-end="url(#ab)"/>
+    <rect x="40" y="70" width="140" height="70" rx="10" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <text x="110" y="100" font-size="20" text-anchor="middle" font-weight="700">you</text>
+    <text x="110" y="124" font-size="15" text-anchor="middle" fill="#666">laptop, ssh</text>
+    <path d="M182 105 H244" stroke="#1b1b1b" stroke-width="3" marker-end="url(#ak)"/>
+    <ellipse cx="790" cy="105" rx="90" ry="45" fill="#fdf3f2" stroke="#b3261e" stroke-width="3"/>
+    <text x="790" y="100" font-size="16" text-anchor="middle" fill="#b3261e" font-weight="700">api.anthropic.com</text>
+    <text x="790" y="122" font-size="14" text-anchor="middle" fill="#b3261e">outside FGCZ</text>
+    <path d="M622 105 H694" stroke="#b3261e" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#am)"/>
+    <text x="658" y="92" font-size="14" text-anchor="middle" fill="#b3261e">text only</text>
+    <defs>
+      <marker id="ab" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1b5e9e"/></marker>
+      <marker id="ak" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1b1b1b"/></marker>
+      <marker id="am" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#b3261e"/></marker>
+    </defs>
+  </svg>
+  <div class="spine key fragment">To answer, it <b>reads your files</b>, and what it reads
+    leaves the cluster. So point it at the <b>course data only</b> — that is published.
+    Almost nothing else on this machine is.</div>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>21 — Desktop apps</h2>
+  <table>
+    <tr><th style="width:30%">App</th><th>Runs on</th><th style="width:36%">Note</th></tr>
+    <tr><td><b>Claude Desktop</b> <span class="tiny">Anthropic</span></td><td>macOS, Windows</td><td>can be pointed at local files (MCP)</td></tr>
+    <tr><td><b>ChatGPT</b> <span class="tiny">OpenAI</span></td><td>macOS, Windows</td><td>voice, canvas</td></tr>
+    <tr><td><b>Gemini</b> <span class="tiny">Google</span></td><td>macOS (Apr 2026) &middot; Windows (10 Sep 2026)</td><td>Google Workspace</td></tr>
+    <tr><td><b>Copilot</b> <span class="tiny">Microsoft</span></td><td>built into Windows and Office</td><td>UZH-provided &mdash; slide 10</td></tr>
+    <tr class="ok"><td><b>LM Studio</b> + a local model</td><td>your own machine, <b>offline</b></td><td>UZH: approved for all data classes</td></tr>
+  </table>
+  <img src="img/S22.png" style="width:100%; max-height:300px; object-fit:contain;
+       margin-top:.4em"
+       alt="Claude Desktop, one window">
+  <p class="src">claude.ai/download &middot; openai.com/chatgpt/download &middot; gemini.google &middot;
+     microsoft.com/copilot &middot; lmstudio.ai &middot; surveyed 9 Sep 2026</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>22 — Web tools</h2>
+  <table>
+    <tr><th style="width:24%">Tool</th><th>Grounded on</th><th style="width:38%">Good for</th></tr>
+    <tr class="ok"><td><b>NotebookLM</b> <span class="tiny">Google</span></td><td>documents <i>you</i> upload</td><td>twenty papers before writing an introduction</td></tr>
+    <tr><td><b>Perplexity</b></td><td>the live web, with citations</td><td>&ldquo;what is current?&rdquo;</td></tr>
+    <tr><td><b>Consensus</b></td><td>published papers</td><td>a quick, evidence-backed answer</td></tr>
+    <tr><td><b>Elicit</b></td><td>published papers</td><td>screening for a systematic review</td></tr>
+    <tr><td><b>Scite</b></td><td>citation context</td><td>does later work support or contradict this?</td></tr>
+    <tr><td><b>SciSpace</b></td><td>one PDF</td><td>explaining a hard paper while you read it</td></tr>
+  </table>
+  <img src="img/S23.jpg" style="width:100%; max-height:205px; object-fit:contain;
+       margin-top:.35em"
+       alt="NotebookLM with a few sources loaded">
+  <div class="spine key fragment">Grounded is not the same as safe. You are uploading the whole
+    document to someone else&rsquo;s service &mdash; nothing unpublished goes in.</div>
+  <p class="src">notebooklm.google &middot; perplexity.ai &middot; consensus.app &middot; elicit.com &middot;
+     scite.ai &middot; scispace.com &middot; surveyed 9 Sep 2026</p>
+</section>
+
+<section>
+  <span class="sess">17 Sep</span>
+  <h2>23 — The two things at the end, and the rule for each</h2>
+
+  <div class="two">
+    <div>
+      <h3 style="color:var(--hot)">Written exam &middot; Tue 6 Oct, 13:00</h3>
+      <div class="trap"><span class="lab">no AI &mdash; none, of any kind</span>
+        Not an agent, not a chat window. What is examined is what you can do
+        <b>without</b> one.</div>
+      <p class="tiny" style="margin-top:.45em">Nothing from this hour is wasted there.
+         The habit of asking for a number and checking where it came from is
+         exactly what a written exam asks you to do on your own.</p>
+    </div>
+    <div>
+      <h3 style="color:var(--ok)">Presentation &middot; Wed 7 Oct</h3>
+      <div class="meas"><span class="lab">AI allowed &mdash; for the reading</span>
+        Surveying the literature. Reviewing background. Summarising a paper
+        <i>that you then read yourself</i>. Checking a definition.</div>
+      <div class="trap" style="margin-top:.45em"><span class="lab">not allowed</span>
+        A presentation <b>produced</b> by AI. The slides, the figures and the
+        argument have to be yours.</div>
+    </div>
+  </div>
+
+  <div class="spine key fragment">Either way you <b>write down what you used it for</b>, and you
+    <b>say so</b> &mdash; one slide, or one line on a slide. Same rule as
+    <code>ai_log.md</code> all term: not <i>whether</i>, but <b>what for</b>, and what you
+    checked yourself.</div>
+
+  <p class="src">26HS EEE338 schedule V1 &middot; exam 6 Oct 13:00&ndash;17:00, 13J96 &middot;
+     student presentations 7 Oct, all day</p>
+</section>
+
+</div></div>
+
+<script src="vendor/reveal.js/dist/reveal.js"></script>
+<script src="vendor/reveal.js/plugin/notes/notes.js"></script>
+<script src="vendor/reveal.js/plugin/highlight/highlight.js"></script>
+<script>
+Reveal.initialize({
+  keyboard: { 13: 'next' },   // Enter also advances (fragments and slides); Space already does
+
+  hash: true,
+  slideNumber: 'c/t',
+  width: 1280, height: 800,
+  margin: 0.06,
+  minScale: 0.2, maxScale: 1.6,
+  transition: 'none',
+  plugins: [ RevealNotes, RevealHighlight ]
+});
+</script>
+</body>
+</html>

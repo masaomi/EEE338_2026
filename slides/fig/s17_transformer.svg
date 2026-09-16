@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="412" viewBox="0 0 960 412" aria-label="top: one transformer block is a self-attention step followed by an ordinary layer, and the block is repeated dozens of times. bottom: in self-attention the word it asks every other word how much it matters, and leans most heavily on STAR"><title>top: one transformer block is a self-attention step followed by an ordinary layer, and the block is repeated dozens of times. bottom: in self-attention the word it asks every other word how much it matters, and leans most heavily on STAR</title><rect x="0" y="0" width="960" height="412" fill="#ffffff"/>
+    <rect x="20" y="30" width="150" height="76" rx="10" fill="#f2f2ef" stroke="#8a8f98" stroke-width="3"/>
+    <text x="95" y="62" font-size="18" text-anchor="middle" fill="#666">all the words,</text>
+    <text x="95" y="86" font-size="18" text-anchor="middle" fill="#666">all at once</text>
+
+    <rect x="232" y="22" width="238" height="92" rx="10" fill="#e8f0f8" stroke="#1b5e9e" stroke-width="4"/>
+    <text x="351" y="54" font-size="21" text-anchor="middle" fill="#1b5e9e" font-weight="700">self-attention</text>
+    <text x="351" y="80" font-size="16" text-anchor="middle" fill="#1b5e9e">every word looks at</text>
+    <text x="351" y="100" font-size="16" text-anchor="middle" fill="#1b5e9e">every other word</text>
+
+    <rect x="522" y="22" width="200" height="92" rx="10" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>
+    <text x="622" y="60" font-size="19" text-anchor="middle" font-weight="700">an ordinary</text>
+    <text x="622" y="84" font-size="19" text-anchor="middle" font-weight="700">layer</text>
+
+    <rect x="790" y="30" width="150" height="76" rx="10" fill="#f2f8f3" stroke="#2e6f40" stroke-width="3"/>
+    <text x="865" y="62" font-size="18" text-anchor="middle" fill="#2e6f40">the next</text>
+    <text x="865" y="86" font-size="18" text-anchor="middle" fill="#2e6f40">word</text>
+
+    <path d="M172 68 H224" stroke="#1b1b1b" stroke-width="4" marker-end="url(#ta)"/>
+    <path d="M472 68 H514" stroke="#1b1b1b" stroke-width="4" marker-end="url(#ta)"/>
+    <path d="M724 68 H782" stroke="#1b1b1b" stroke-width="4" marker-end="url(#ta)"/>
+    <path d="M622 122 V146 H351 V122" stroke="#1b5e9e" stroke-width="3.5" fill="none" stroke-dasharray="9 6" marker-end="url(#tb)"/>
+    <text x="486" y="168" font-size="17" text-anchor="middle" fill="#1b5e9e" font-weight="700">one block — and the block is repeated dozens of times</text>
+
+    <line x1="20" y1="192" x2="940" y2="192" stroke="#d8d8d8" stroke-width="2"/>
+    <text x="20" y="220" font-size="19" fill="#1b5e9e" font-weight="700">inside the blue box — this is what <tspan font-style="italic">attention</tspan> means</text>
+    <text x="20" y="246" font-size="17" fill="#666">Each word asks every other word <tspan font-style="italic">how much do you matter to me?</tspan> and mixes in the answers it gets.</text>
+
+    <path d="M404 296 C 380 238, 100 238, 78 292"  stroke="#1b5e9e" stroke-width="8" fill="none" opacity=".95"/>
+    <path d="M404 296 C 392 250, 222 250, 198 292" stroke="#1b5e9e" stroke-width="3.5" fill="none" opacity=".45"/>
+    <path d="M416 296 C 464 258, 566 258, 606 292" stroke="#1b5e9e" stroke-width="2.5" fill="none" opacity=".3"/>
+
+    <text x="60"  y="324" font-size="30" font-family="Menlo,monospace" font-weight="700">STAR</text>
+    <text x="152" y="324" font-size="30" font-family="Menlo,monospace">finished, and</text>
+    <text x="392" y="324" font-size="30" font-family="Menlo,monospace" font-weight="700" fill="#b3261e">it</text>
+    <text x="436" y="324" font-size="30" font-family="Menlo,monospace">reported</text>
+    <text x="606" y="324" font-size="30" font-family="Menlo,monospace">76.58</text>
+
+    <text x="20" y="362" font-size="17" fill="#666">The thick line is the one <tspan fill="#b3261e" font-weight="700">it</tspan> leans on, so <tspan fill="#b3261e" font-weight="700">it</tspan> comes to mean <tspan font-weight="700">STAR</tspan> — that is where the word looks.</text>
+    <text x="20" y="388" font-size="17" fill="#666"><tspan font-weight="700">Nobody wrote that rule.</tspan> It fell out of the weights, from an enormous amount of text.</text>
+
+    <defs>
+      <marker id="ta" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#1b1b1b"/></marker>
+      <marker id="tb" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#1b5e9e"/></marker>
+    </defs>
+  </svg>

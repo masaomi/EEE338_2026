@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="230" viewBox="0 0 900 230" aria-label="a fast typist at a keyboard on the left; your experiment, unseen by it, on the right"><title>a fast typist at a keyboard on the left; your experiment, unseen by it, on the right</title><rect x="0" y="0" width="900" height="230" fill="#1b1b1b"/>
+    <!-- typist -->
+    <circle cx="150" cy="70" r="26" fill="none" stroke="#9ad39a" stroke-width="5"/>
+    <path d="M110 165 q40 -60 80 0" fill="none" stroke="#9ad39a" stroke-width="5"/>
+    <rect x="60" y="165" width="180" height="26" rx="6" fill="#9ad39a"/>
+    <g stroke="#9ad39a" stroke-width="4" stroke-linecap="round">
+      <line x1="255" y1="120" x2="300" y2="112"/><line x1="255" y1="140" x2="310" y2="140"/><line x1="255" y1="160" x2="300" y2="168"/>
+    </g>
+    <text x="150" y="222" font-size="22" fill="#9ad39a" text-anchor="middle" font-weight="700">a very fast typist</text>
+    <!-- wall -->
+    <line x1="450" y1="20" x2="450" y2="200" stroke="#555" stroke-width="3" stroke-dasharray="10 10"/>
+    <text x="450" y="222" font-size="18" fill="#8a8f98" text-anchor="middle">cannot see across</text>
+    <!-- experiment -->
+    <path d="M680 40 h60 v50 l45 85 q8 20 -12 20 h-126 q-20 0 -12 -20 l45 -85 z" fill="none" stroke="#ff9a92" stroke-width="5"/>
+    <text x="710" y="150" font-size="52" fill="#ff9a92" text-anchor="middle" font-weight="700">?</text>
+    <text x="710" y="222" font-size="22" fill="#ff9a92" text-anchor="middle" font-weight="700">your experiment</text>
+  </svg>
