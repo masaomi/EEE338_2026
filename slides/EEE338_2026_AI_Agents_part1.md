@@ -48,7 +48,7 @@ Contents — the deck's own section numbers
 | Session | Block |
 |---|---|
 | **Today** — 17 Sep · 1 h · slides 2–23 | **0. Set up** — install, your key, first screen. **We do this first.**<br>**1. The rules that bind you** — ethics, data classes, three cautions<br>**2. The tools** — what an LLM is, what an agent is, and which one for which job |
-| 18 Sep | **3. Claude Code in practice** — the two files that decide what it knows. Then **at the keyboard**: the practical page `EEE338_2026_Claude_Code`, then Command Practice and Mapping |
+| 18 Sep | **3. Claude Code in practice** — the two files that decide what it knows. Then **at the keyboard**: the practical page `EEE338_2026_Claude_Code_part2`, then Command Practice and Mapping |
 | 22 Sep | **4. How it fails on our data** — the five failures, and which practical each one lives in. You run them; they are exercises, not slides |
 | 23 Sep | **5. What you are graded on** |
 
@@ -114,6 +114,7 @@ All ten keys are revoked on 24 September.
 ## Slide 6 — The very first run: three prompts, one trap
 
 ```sh
+ $ mkdir -p /scratch/EEE338_2026/your_name  # you do not have one yet
  $ cd /scratch/EEE338_2026/your_name
  $ claude
 ```
