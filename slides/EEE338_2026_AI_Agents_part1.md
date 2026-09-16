@@ -65,7 +65,25 @@ Contents — the deck's own section numbers
 
 *Slides 4–7 · do this first · 17 September*
 
-## Slide 4 — Install it
+## Slide 4 — Log in first, then install it
+
+**Getting to `fgcz-kl-004`** — two hops from your own machine, because it only
+exists inside the FGCZ subnetwork:
+
+```sh
+ $ ssh username@fgcz-genomics.uzh.ch
+ $ ssh fgcz-kl-004
+```
+
+`username` is the same as your **B-Fabric account**.
+
+> **Three wrong passwords — locked out for 30 minutes.**
+> **Stop at the second.** Retyping does not open it any sooner. Sign in at
+> **fgcz-bfabric.uzh.ch** in a browser instead — **same account, same
+> password**. If that works, the password is right and the trouble is
+> elsewhere; and you still have a try in hand.
+
+**Now install it**, on `fgcz-kl-004`:
 
 ```sh
  $ curl -fsSL https://claude.ai/install.sh | bash
@@ -76,31 +94,22 @@ Contents — the deck's own section numbers
 The same line works on `fgcz-kl-004` now (about a minute), on your own laptop
 tonight if you like, and on any Linux or macOS machine.
 
-**Getting to `fgcz-kl-004` first** — two hops, from a terminal on your own
-machine:
-
-```sh
- $ ssh username@fgcz-genomics.uzh.ch
- $ ssh fgcz-kl-004
-```
-
-`username` is the same as your **B-Fabric account**. `fgcz-kl-004` only exists
-inside the FGCZ subnetwork, which is why there are two hops.
-
-*Sources: claude.ai/install.sh · code.claude.com/docs*
+*Sources: claude.ai/install.sh · code.claude.com/docs · fgcz-bfabric.uzh.ch*
 
 ## Slide 5 — Setting up your key
 
-You are given a number. In this example it is `03`.
+You are given a number, and `XX` below stands for it. **The table of numbers is
+in section 4 of the practical page** — find yourself there, and type your own
+two digits in.
 
 ```sh
  $ umask 077                                      # new files: you only
- $ cp /scratch/EEE338_2026/keys/03 ~/.eee338_key  # your own copy
- $ touch /scratch/EEE338_2026/keys_done/03        # tells me you have it
+ $ cp /scratch/EEE338_2026/keys/XX ~/.eee338_key  # your own copy
+ $ touch /scratch/EEE338_2026/keys_done/XX        # tells me you have it
  $ source ~/.eee338_key                           # once per login
 ```
 
-`keys/03` — only you can read it → copy once → `~/.eee338_key`, your working
+`keys/XX` — only you can read it → copy once → `~/.eee338_key`, your working
 copy → then I delete the shared copy.
 
 * `source` it **once per login**. Deliberately not in `.bashrc` — you should
@@ -109,7 +118,7 @@ copy → then I delete the shared copy.
 * Never put it in a script, a log, `ai_log.md`, or anything you hand in.
   If it leaks: **tell the lecturer**, and it is revoked.
 
-All ten keys are revoked on 24 September.
+All ten keys are revoked when the course ends.
 
 ## Slide 6 — The very first run: three prompts, one trap
 
@@ -118,6 +127,8 @@ All ten keys are revoked on 24 September.
  $ cd /scratch/EEE338_2026/your_name
  $ claude
 ```
+
+> ### Do **not** type `your_name` — type **your own name**.
 
 1. **text style** — any one. `Enter`
 2. **"use this API key?"** — **`↑` to Yes**, then `Enter`

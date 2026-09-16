@@ -217,46 +217,58 @@ code{ background:#f0f0ed; padding:.05em .28em; border-radius:3px;
 
 <section>
   <span class="sess">17 Sep</span>
-  <h2>4 — Install it</h2>
+  <h2>4 — Log in first, then install it</h2>
+
+  <p class="small" style="margin:0 0 .3em"><b>Getting to fgcz-kl-004</b> — two hops from your
+     own machine, because it only exists inside the FGCZ subnetwork:</p>
+  <div class="term">
+<span class="u">$ ssh username@fgcz-genomics.uzh.ch</span>
+<span class="u">$ ssh fgcz-kl-004</span>
+  </div>
+  <p class="small"><code>username</code> is the same as your <b>B-Fabric account</b>.</p>
+
+  <div class="trap" style="margin-top:.35em"><span class="lab">three wrong passwords &mdash; locked out for 30 minutes</span>
+    <b>Stop at the second.</b> Retyping does not open it any sooner. Sign in at
+    <b>fgcz-bfabric.uzh.ch</b> in a browser instead &mdash; <b>same account, same password</b>.
+    If that works, the password is right and the trouble is elsewhere; and you still have
+    a try in hand.</div>
+
+  <p class="small" style="margin-top:.45em"><b>Now install it</b>, on fgcz-kl-004:</p>
   <div class="term">
 <span class="u">$ curl -fsSL https://claude.ai/install.sh | bash</span>
 <span class="g">  → ~/.local/bin/claude</span>
 <span class="c">    no root · no Node.js · no package manager · nothing outside your home</span>
   </div>
-  <div class="flow" style="margin-top:.55em">
+  <div class="flow" style="margin-top:.4em">
     <span class="b cool">on fgcz-kl-004<br><span class="tiny">now, ~1 minute</span></span>
     <span class="ar">same line</span>
     <span class="b cool">on your laptop<br><span class="tiny">tonight, if you like</span></span>
     <span class="ar">same line</span>
     <span class="b cool">any Linux / macOS</span>
   </div>
-
-  <p class="small" style="margin-top:.55em"><b>Getting to fgcz-kl-004 first</b> — two hops,
-     from a terminal on your own machine:</p>
-  <div class="term">
-<span class="u">$ ssh username@fgcz-genomics.uzh.ch</span>
-<span class="u">$ ssh fgcz-kl-004</span>
-  </div>
-  <p class="small"><code>username</code> is the same as your <b>B-Fabric account</b>.
-     fgcz-kl-004 only exists inside the FGCZ subnetwork, which is why there are two hops.</p>
-  <p class="src">claude.ai/install.sh · code.claude.com/docs</p>
+  <p class="src">claude.ai/install.sh · code.claude.com/docs · fgcz-bfabric.uzh.ch</p>
 </section>
 
 
 <section>
   <span class="sess">17 Sep</span>
   <h2>5 — Setting up your key</h2>
-  <p class="small">You are given a number. In this example it is <code>03</code>.</p>
+  <!-- XX is a placeholder and never a real number. An example number on a
+       projected slide gets copied verbatim by the room, and a number that is
+       not yours is the one mistake on this slide that works silently. -->
+  <p class="small">You are given a number, and <code>XX</code> below stands for it.
+     <b>The table of numbers is in section 4 of the practical page</b> &mdash; find
+     yourself there, and type your own two digits in.</p>
 
   <div class="term">
-<span class="u">$ umask 077</span>                                      <span class="c"># new files: you only</span>
-<span class="u">$ cp /scratch/EEE338_2026/keys/03 ~/.eee338_key</span>   <span class="c"># your own copy</span>
-<span class="u">$ touch /scratch/EEE338_2026/keys_done/03</span>         <span class="c"># tells me you have it</span>
-<span class="u">$ source ~/.eee338_key</span>                             <span class="c"># once per login</span>
+<span class="u">$ umask 077</span>                                       <span class="c"># new files: you only</span>
+<span class="u">$ cp /scratch/EEE338_2026/keys/XX ~/.eee338_key</span>   <span class="c"># your own copy</span>
+<span class="u">$ touch /scratch/EEE338_2026/keys_done/XX</span>         <span class="c"># tells me you have it</span>
+<span class="u">$ source ~/.eee338_key</span>                            <span class="c"># once per login</span>
   </div>
 
   <div class="flow" style="margin-top:.55em">
-    <span class="b cool">keys/03<br><span class="tiny">only you can read it</span></span>
+    <span class="b cool">keys/XX<br><span class="tiny">only you can read it</span></span>
     <span class="ar">copy once →</span>
     <span class="b" style="border-color:var(--ok); color:var(--ok)">~/.eee338_key<br><span class="tiny">your working copy</span></span>
     <span class="ar">then →</span>
@@ -270,7 +282,7 @@ code{ background:#f0f0ed; padding:.05em .28em; border-radius:3px;
     <li>Never put it in a script, a log, <code>ai_log.md</code>, or anything you hand in.
         If it leaks: <b>tell the lecturer</b>, and it is revoked.</li>
   </ul>
-  <p class="small dim">All ten keys are revoked on 24 September.</p>
+  <p class="small dim">All ten keys are revoked when the course ends.</p>
 </section>
 
 
@@ -282,6 +294,13 @@ code{ background:#f0f0ed; padding:.05em .28em; border-radius:3px;
 <span class="u">$ cd /scratch/EEE338_2026/your_name</span>
 <span class="u">$ claude</span>
   </div>
+  <!-- Every year a few people type the placeholder itself. It is red, it is
+       large, and it sits against the command it is about, because by the time
+       they read a footnote they have already typed it. -->
+  <p style="margin:.4em 0 0; color:var(--hot); font-weight:700; font-size:1.1em;
+            text-align:center">
+    Do <u>not</u> type <code style="background:#fdf3f2; color:var(--hot)">your_name</code>
+    &mdash; type <span style="text-decoration:underline">your own name</span>.</p>
 
   <div class="flow" style="margin-top:.5em">
     <span class="b">1 &middot; text style<br><span class="tiny">any one. Enter</span></span>
