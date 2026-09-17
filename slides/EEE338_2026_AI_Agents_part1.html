@@ -77,6 +77,12 @@ tr.ok td{ background:#f2f8f3; }
 .three{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:.8em; }
 .small{ font-size:.72em; } .tiny{ font-size:.58em; color:var(--dim); }
 .dim{ color:var(--dim); }
+/* reveal vendors the Meyer reset, whose element list includes <i> and sets
+   font: inherit -- which throws away the browser's own italic. The theme puts
+   it back for em, blockquote and q, and never for i or cite. Without this line
+   every <i> on these slides renders upright and the emphasis is silently gone:
+   document titles, journal names, and any species name. */
+.reveal i, .reveal em, .reveal cite{ font-style:italic; }
 .src{ position:absolute; bottom:-1.3em; left:0; font-size:.42em; color:var(--dim); }
 
 /* placeholder for a screenshot Masa still has to take */
