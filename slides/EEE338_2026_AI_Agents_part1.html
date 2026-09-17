@@ -920,6 +920,8 @@ Do you want to use this API key?
     <tr><td>Codex CLI</td><td>OpenAI</td><td>same idea, different model</td></tr>
     <tr><td>Copilot CLI</td><td>GitHub</td><td>tied to a GitHub account</td></tr>
     <tr><td>Gemini CLI</td><td>Google</td><td>same idea again</td></tr>
+    <tr><td>opencode</td><td>Anomaly</td><td>open source (MIT). <b>Not tied to one company's model</b> —
+        it drives any of them, including one running on your own machine</td></tr>
   </table>
   <p class="small" style="margin-top:.6em">They are more alike than the marketing
      suggests. <b>What you learn here transfers.</b> The 2025 version of this slide
@@ -927,8 +929,13 @@ Do you want to use this API key?
      a reason to learn the shape rather than the product.</p>
   <p class="small dim">How fast: Google's desktop app reached Windows on 10 September 2026.
      That is one week before this lecture.</p>
-  <aside class="notes">Check the four product names still exist on the morning of 17 Sep.
-    If one has been renamed, say so out loud — it makes the point better than the slide does.</aside>
+  <p class="src">claude.ai/code &middot; developers.openai.com/codex/cli &middot;
+     github.com/github/copilot-cli &middot; geminicli.com &middot;
+     opencode.ai, github.com/anomalyco/opencode (MIT) &middot; retrieved 17 Sep 2026</p>
+  <aside class="notes">Check the five product names still exist on the morning of 17 Sep.
+    If one has been renamed, say so out loud — it makes the point better than the slide does.
+    opencode is the one that is not a vendor's: it is the same shape with the model swapped out,
+    which is the whole argument of this slide in one row.</aside>
 </section>
 
 <section>
@@ -998,12 +1005,22 @@ Do you want to use this API key?
     <tr><td><b>Gemini</b> <span class="tiny">Google</span></td><td>macOS (Apr 2026) &middot; Windows (10 Sep 2026)</td><td>Google Workspace</td></tr>
     <tr><td><b>Copilot</b> <span class="tiny">Microsoft</span></td><td>built into Windows and Office</td><td>UZH-provided &mdash; slide 10</td></tr>
     <tr class="ok"><td><b>LM Studio</b> + a local model</td><td>your own machine, <b>offline</b></td><td>UZH: approved for all data classes</td></tr>
+    <tr><td><b>Ollama</b> + a local model</td><td>your own machine, <b>offline</b></td><td><b>not on the UZH list</b> — see below</td></tr>
   </table>
-  <img src="img/S22.png" style="width:100%; max-height:300px; object-fit:contain;
+  <p class="small" style="margin-top:.5em"><b>Ollama does the same job</b> — a model on your own
+     machine, nothing leaving it — and it is what a CLI agent talks to when you point one at a
+     local model. <b>It is not on the UZH list.</b> “Approved for all data classes” is about
+     <b>LM Studio</b>, not about local models in general: UZH Central IT's own write-up on running
+     them says Ollama and Open WebUI are <i>not centrally supported by UZH IT</i>, and warns not to
+     leave its REST API open to others. Fine to explore; for anything above <b>public</b>, use the
+     approved one.</p>
+  <img src="img/S22.png" style="width:100%; max-height:190px; object-fit:contain;
        margin-top:.4em"
        alt="Claude Desktop, one window">
   <p class="src">claude.ai/download &middot; openai.com/chatgpt/download &middot; gemini.google &middot;
-     microsoft.com/copilot &middot; lmstudio.ai &middot; surveyed 9 Sep 2026</p>
+     microsoft.com/copilot &middot; lmstudio.ai &middot; ollama.com &middot; surveyed 9 Sep 2026 &middot;
+     UZH status from zi.uzh.ch “AI Tools and Services” and “AI on Your Laptop” (22 Jan 2025),
+     both retrieved 17 Sep 2026</p>
 </section>
 
 <section>

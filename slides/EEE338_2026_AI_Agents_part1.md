@@ -414,6 +414,7 @@ Copilot CLI, Gemini CLI.
 | Codex CLI | OpenAI | same idea, different model |
 | Copilot CLI | GitHub | tied to a GitHub account |
 | Gemini CLI | Google | same idea again |
+| opencode | Anomaly | open source (MIT). **Not tied to one company's model** — it drives any of them, including one running on your own machine |
 
 They are more alike than the marketing suggests. **What you learn here
 transfers.** The 2025 version of this slide is already wrong about every model
@@ -422,6 +423,10 @@ than the product.
 
 How fast: Google's desktop app reached Windows on 10 September 2026. That is one
 week before this lecture.
+
+*Sources: claude.ai/code · developers.openai.com/codex/cli ·
+github.com/github/copilot-cli · geminicli.com · opencode.ai,
+github.com/anomalyco/opencode (MIT) · retrieved 17 Sep 2026*
 
 ## Slide 20 — Claude Code: the tool for this course
 
@@ -446,11 +451,22 @@ week before this lecture.
 | **Gemini** (Google) | macOS (Apr 2026) · Windows (10 Sep 2026) | Google Workspace |
 | **Copilot** (Microsoft) | built into Windows and Office | UZH-provided — slide 10 |
 | **LM Studio** + a local model | your own machine, **offline** | UZH: approved for all data classes |
+| **Ollama** + a local model | your own machine, **offline** | **not on the UZH list** — see below |
+
+**Ollama does the same job** — a model on your own machine, nothing leaving it —
+and it is what a CLI agent talks to when you point one at a local model. **It is
+not on the UZH list.** "Approved for all data classes" is about **LM Studio**,
+not about local models in general: UZH Central IT's own write-up on running them
+says Ollama and Open WebUI are *not centrally supported by UZH IT*, and warns not
+to leave its REST API open to others. Fine to explore; for anything above
+**public**, use the approved one.
 
 ![Claude Desktop, one window](img/S22.png)
 
 *Sources: claude.ai/download · openai.com/chatgpt/download · gemini.google ·
-microsoft.com/copilot · lmstudio.ai · surveyed 9 Sep 2026*
+microsoft.com/copilot · lmstudio.ai · ollama.com · surveyed 9 Sep 2026 · UZH
+status from zi.uzh.ch "AI Tools and Services" and "AI on Your Laptop"
+(22 Jan 2025), both retrieved 17 Sep 2026*
 
 ## Slide 22 — Web tools
 
