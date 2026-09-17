@@ -14,7 +14,7 @@
     <path d="M182 105 H244" stroke="#1b1b1b" stroke-width="3" marker-end="url(#ak)"/>
     <ellipse cx="790" cy="105" rx="90" ry="45" fill="#fdf3f2" stroke="#b3261e" stroke-width="3"/>
     <text x="790" y="100" font-size="16" text-anchor="middle" fill="#b3261e" font-weight="700">api.anthropic.com</text>
-    <text x="790" y="122" font-size="14" text-anchor="middle" fill="#b3261e">outside FGCZ</text>
+    <text x="790" y="122" font-size="14" text-anchor="middle" fill="#b3261e">outside UZH</text>
     <path d="M622 105 H694" stroke="#b3261e" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#am)"/>
     <text x="658" y="92" font-size="14" text-anchor="middle" fill="#b3261e">text only</text>
     <defs>
