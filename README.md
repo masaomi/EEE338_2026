@@ -71,18 +71,6 @@ png/        figures the practical pages point at
 
 ----
 
-## The two things at the end
-
-| | | |
-|---|---|---|
-| **Written exam** | Tue 6 Oct, 13:00–17:00, room 13J96 | **no AI, of any kind** |
-| **Presentation** | Wed 7 Oct, all day | AI allowed for the reading, not for producing the presentation. Say what you used it for |
-
-The full rule for each is slide 23 of
-[the 17 September deck](slides/EEE338_2026_AI_Agents_part1.md#slide-23--the-two-things-at-the-end-and-the-rule-for-each).
-
-----
-
 ## Licence and reuse
 
 The slides and reading versions are Masa's course material. `slides/vendor/`
