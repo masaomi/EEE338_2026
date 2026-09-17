@@ -36,11 +36,23 @@ from now.
 
 ----
 
-## The practical pages are not in this repository
+## Hands-on pages
 
-The hands-on pages — `EEE338_2026_Claude_Code_part1` and the practicals that
-follow it — are published separately, and **the link is given to you in the
-lecture**. They are not linked from here.
+The practical pages are published separately from this repository, and each one
+is introduced in the session it belongs to. **The row is here from the start;
+the link is added on the day.** If a row below has no link yet, that session has
+not happened.
+
+| page | session | what it covers |
+|---|---|---|
+| `EEE338_2026_Claude_Code_part1` | Thu 17 Sep | install, your key, the first screen |
+| `EEE338_2026_Claude_Code_part2` | Fri 18 Sep | the loop, permission modes, `CLAUDE.md`, the experiment, subagents |
+| `EEE338_2026_Command_Practice` | Fri 18 Sep | the file system by hand, GC content, FastQC |
+| `EEE338_2026_Mapping` | Tue 22 Sep | quality control, mapping, basic statistics |
+| `EEE338_2026_Counting` | Wed 23 Sep | counting and normalisation |
+| `EEE338_2026_DEG_Analysis` | Wed 23 Sep | differential expression |
+| `EEE338_2026_Final_Practice` | Wed 23 Sep | the run you do on your own |
+| `EEE338_2026_Final_Practice_Report` | Wed 23 Sep | what to hand in |
 
 What *is* here is what those pages draw on: `png/` holds the figures they
 display.
