@@ -60,6 +60,17 @@ in `fastqc_examples/`.
 > the room. Work them out first — the point of an exercise you can look up is
 > the ten minutes before you look it up.
 
+### Friday 18 September — AI Agents for Bioinformatics, part 2
+
+The lecture that opens the afternoon, before the hands-on pages below.
+
+| | |
+|---|---|
+| [**the deck**](https://masaomi.github.io/EEE338_2026/slides/EEE338_2026_AI_Agents_part2.html) | as shown in the room — the loop, permission modes, `CLAUDE.md`, the experiment, subagents |
+
+The screens that showed the links to the hands-on pages are not in this copy.
+The links themselves are in the table below, which is where they keep.
+
 ----
 
 ## Hands-on pages

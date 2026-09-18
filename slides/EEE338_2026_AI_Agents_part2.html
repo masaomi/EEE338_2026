@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EEE338 2026 — AI Agents for Bioinformatics, part 2</title>
+
+<!-- reveal.js is vendored in this repository on purpose.
+     The previous nbconvert deck pulled reveal, jQuery and MathJax from
+     unpkg and cdnjs; if the lecture-room network hiccups, that deck loses
+     its stylesheet and its slide framework. This one has no external
+     references at all. -->
+<link rel="stylesheet" href="vendor/reveal.js/dist/reset.css">
+<link rel="stylesheet" href="vendor/reveal.js/dist/reveal.css">
+<link rel="stylesheet" href="vendor/reveal.js/dist/theme/white.css">
+<link rel="stylesheet" href="vendor/reveal.js/plugin/highlight/zenburn.css">
+
+<style>
+:root{
+  --ink:#1b1b1b; --dim:#666; --rule:#d8d8d8;
+  --hot:#b3261e;      /* traps, warnings */
+  --cool:#1b5e9e;     /* the tools, the machine */
+  --ok:#2e6f40;       /* verified numbers */
+  --paper:#fbfbf9;
+}
+.reveal{ font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; color:var(--ink); font-size:30px; }
+.reveal .slides{ text-align:left; }
+.reveal .slides section{ height:100%; }
+.reveal h1,.reveal h2,.reveal h3,.reveal h4{
+  text-transform:none; letter-spacing:0; font-weight:700; color:var(--ink); margin-bottom:.4em; }
+.reveal h1{ font-size:1.9em; line-height:1.15; }
+.reveal h2{ font-size:1.35em; line-height:1.2; border-bottom:3px solid var(--ink); padding-bottom:.18em; }
+.reveal h3{ font-size:1.05em; color:var(--cool); }
+.reveal p,.reveal li{ line-height:1.4; }
+.reveal ul,.reveal ol{ margin-left:.6em; }
+.reveal li{ margin-bottom:.32em; }
+.reveal a{ color:var(--cool); }
+.reveal section img{ border:none; box-shadow:none; }
+
+/* slide number + session badge in the corner */
+.sess{ position:absolute; top:-1.1em; right:0; font-size:.5em; letter-spacing:.06em;
+       color:#fff; background:var(--cool); padding:.18em .6em; border-radius:3px; }
+.sess.s2{ background:#4a6b8a; } .sess.s3{ background:#7a5c3e; } .sess.s4{ background:#5c4a6b; }
+
+/* the one-line takeaway that closes a slide */
+.spine{ margin-top:.7em; padding:.45em .7em; border-left:6px solid var(--ink);
+        background:#f2f2ef; font-weight:600; }
+
+/* a trap: something that is wrong in a way that looks right */
+.trap{ border:2px solid var(--hot); border-radius:5px; padding:.5em .8em; background:#fdf3f2; }
+.trap > .lab{ display:block; font-size:.62em; letter-spacing:.1em; text-transform:uppercase;
+              color:var(--hot); font-weight:700; margin-bottom:.25em; }
+
+/* a verified measurement */
+.meas{ border:2px solid var(--ok); border-radius:5px; padding:.5em .8em; background:#f2f8f3; }
+.meas > .lab{ display:block; font-size:.62em; letter-spacing:.1em; text-transform:uppercase;
+              color:var(--ok); font-weight:700; margin-bottom:.25em; }
+
+/* terminal transcript */
+.term{ background:#22242a; color:#e6e6e6; font-family:"SF Mono",Menlo,Consolas,monospace;
+       font-size:.56em; line-height:1.35; padding:.7em .9em; border-radius:5px;
+       white-space:pre; overflow-x:auto; }
+.term .u{ color:#8fd3ff; }            /* what the human typed */
+.term .g{ color:#9ad39a; }            /* good / real output */
+.term .r{ color:#ff9a92; }            /* the wrong bit */
+.term .c{ color:#8a8f98; }            /* comment */
+
+.reveal table{ font-size:.72em; border-collapse:collapse; width:100%; margin:.4em 0; }
+.reveal table th{ background:#efefec; border-bottom:2px solid var(--ink);
+                  text-align:left; padding:.28em .5em; font-size:.95em; }
+.reveal table td{ border-bottom:1px solid var(--rule); padding:.24em .5em; }
+.reveal table td.n{ text-align:right; font-family:"SF Mono",Menlo,monospace; }
+tr.hi td{ background:#fdf3f2; font-weight:700; }
+tr.ok td{ background:#f2f8f3; }
+
+.two{ display:grid; grid-template-columns:1fr 1fr; gap:1em; }
+.three{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:.8em; }
+.small{ font-size:.72em; } .tiny{ font-size:.58em; color:var(--dim); }
+.dim{ color:var(--dim); }
+/* reveal vendors the Meyer reset, whose element list includes <i> and sets
+   font: inherit -- which throws away the browser's own italic. The theme puts
+   it back for em, blockquote and q, and never for i or cite. Without this line
+   every <i> on these slides renders upright and the emphasis is silently gone:
+   document titles, journal names, and any species name. */
+.reveal i, .reveal em, .reveal cite{ font-style:italic; }
+.src{ position:absolute; bottom:-1.3em; left:0; font-size:.42em; color:var(--dim); }
+
+/* placeholder for a screenshot Masa still has to take */
+.figph{ border:2px dashed #b9b9b9; border-radius:5px; background:#f6f6f4;
+        padding:1.1em .8em; text-align:center; color:#8a8a8a; font-size:.66em; }
+.figph b{ color:#6a6a6a; }
+
+/* --- diagram parts, so a slide can show rather than tell --------------- */
+
+/* labelled horizontal bar: <div class="barrow"><span>label</span>
+     <span class="track"><i class="bar" style="width:70%"></i></span><span>note</span></div> */
+.barrow{ display:grid; grid-template-columns:11em 1fr 7em; align-items:center;
+         gap:.6em; margin:.3em 0; font-size:.68em; }
+.track{ background:#ececea; border-radius:3px; height:1.3em; display:block; }
+.bar{ display:block; height:100%; border-radius:3px; background:var(--cool); }
+.bar.grey{ background:#a9a9a4; } .bar.hot{ background:var(--hot); }
+.bar.ok{ background:var(--ok); }
+
+/* a single big number with a caption under it */
+.figs{ display:grid; grid-template-columns:1fr 1fr; gap:1em; margin-top:.5em; }
+.fig{ text-align:center; padding:.7em .5em; border-radius:5px; background:#f2f2ef; }
+.fig.bad{ background:#fdf3f2; border:2px solid var(--hot); }
+.fig .cap{ font-size:.5em; letter-spacing:.09em; text-transform:uppercase; color:var(--dim); }
+.fig.bad .cap{ color:var(--hot); }
+.fig .num{ font-size:2.2em; font-weight:700; line-height:1.05; color:#6a6a6a; }
+.fig.bad .num{ color:var(--hot); }
+.fig .unit{ font-size:.72em; }
+
+/* left-to-right flow: box → box → box */
+.flow{ display:flex; align-items:center; gap:.45em; flex-wrap:wrap; font-size:.66em;
+       margin:.5em 0; }
+.flow .b{ border:2px solid var(--ink); border-radius:5px; padding:.32em .6em;
+          background:#fff; font-weight:600; }
+.flow .b.cool{ border-color:var(--cool); color:var(--cool); }
+.flow .b.hot{ border-color:var(--hot); color:var(--hot); }
+.flow .ar{ color:var(--dim); font-weight:700; }
+
+/* callout pinned next to a terminal transcript */
+.note{ font-size:.58em; color:var(--cool); font-weight:600; }
+
+kbd{ background:#eee; border:1px solid #bbb; border-bottom-width:2px; border-radius:3px;
+     padding:.05em .35em; font-family:Menlo,monospace; font-size:.85em; }
+code{ background:#f0f0ed; padding:.05em .28em; border-radius:3px;
+      font-family:"SF Mono",Menlo,monospace; font-size:.88em; }
+
+/* the divider slides between sessions: title centred both ways */
+.reveal .slides section.divider{ display:flex !important; flex-direction:column;
+        justify-content:center; align-items:center; text-align:center !important; }
+.divider h1{ font-size:2.4em; }
+.divider .when{ font-size:.9em; color:var(--dim); letter-spacing:.1em; margin-top:.6em; }
+
+/* the one message a slide exists for: red, and it appears on the next key press
+   (reveal.js fragment). <div class="spine key fragment">…</div> */
+.spine.key{ border-left-color:var(--hot); background:#fdf3f2; color:var(--hot); }
+
+/* a screenshot Masa takes; sized so the layout does not jump when it arrives */
+.shot{ border:2px dashed #b9b9b9; border-radius:5px; background:#f6f6f4; color:#8a8a8a;
+       font-size:.6em; display:flex; align-items:center; justify-content:center; }
+
+/* inline SVG illustrations */
+.ill{ width:100%; height:auto; display:block; margin:.4em auto; }
+.ill text{ font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; }
+
+/* Motion on a figure is CSS only and sits on top of a figure that is complete
+   without it: every animated element carries class "mov" and is invisible at
+   its 0% keyframe. Off-screen slides (no .present) hold the animation at 0, so
+   they show exactly the still figure; so does anyone whose OS asks for less
+   motion. The keyframes themselves live in a <style> inside each svg, with
+   every name prefixed f<slide>- because inline SVG shares this stylesheet. */
+.reveal .slides section:not(.present) svg .mov{ animation-play-state:paused; }
+@media (prefers-reduced-motion:reduce){ .reveal svg .mov{ display:none; } }
+</style>
+</head>
+<body>
+<div class="reveal"><div class="slides">
+<section data-background-color="#1b1b1b">
+  <h1 style="color:#fff">AI Agents for<br>Bioinformatics</h1>
+  <p style="color:#9ad39a; font-size:.8em; margin-top:.8em">part 2 &mdash; at the keyboard,
+     and what it does to our own data</p>
+  <p style="color:#8a8f98; font-size:.62em">
+    EEE338 &middot; University of Zurich / FGCZ &middot; Masaomi Hatakeyama<br>
+    18 September 2026</p>
+  <p class="tiny" style="color:#666; margin-top:1.2em">
+    continues from slide 23 &middot; the numbering runs on</p>
+</section>
+<section data-background-color="#1b1b1b">
+  <h2 style="color:#fff; border-color:#9ad39a">24 — The most important tip</h2>
+  <p style="color:#fff; font-size:1.4em; line-height:1.3; margin-top:.7em">
+    If you have a question,</p>
+  <p style="color:#9ad39a; font-size:1.95em; font-weight:700; line-height:1.2; margin-top:.25em">
+    ask the LLM first.</p>
+  <p class="fragment" style="color:#8a8f98; font-size:1em; margin-top:.45em">
+    (it is cleverer than me)</p>
+  <p class="fragment" style="color:#ff9a92; font-size:.78em; margin-top:.7em">
+    It is. And it has still never seen your experiment &mdash; <b>I have</b>.
+    So bring me what is left. &mdash; slide 3</p>
+  <svg class="ill" viewBox="0 0 900 192" style="max-width:800px; margin-top:.35em"
+       aria-label="you ask the LLM first and it answers in seconds; whatever it cannot answer
+                   you bring to the lecturer, who has seen your experiment">
+    <!-- you -->
+    <circle cx="62" cy="46" r="19" fill="none" stroke="#fff" stroke-width="4"/>
+    <path d="M34 110 q28 -44 56 0" fill="none" stroke="#fff" stroke-width="4"/>
+    <text x="62" y="150" font-size="20" fill="#fff" text-anchor="middle" font-weight="700">you</text>
+    <!-- first stop -->
+    <path d="M108 64 H214" stroke="#9ad39a" stroke-width="4" marker-end="url(#tipg)"/>
+    <text x="161" y="50" font-size="17" fill="#9ad39a" text-anchor="middle">ask first</text>
+    <rect x="226" y="26" width="210" height="76" rx="12" fill="none" stroke="#9ad39a" stroke-width="4"/>
+    <text x="331" y="62" font-size="24" fill="#9ad39a" text-anchor="middle" font-weight="700">the LLM</text>
+    <text x="331" y="88" font-size="16" fill="#9ad39a" text-anchor="middle">answers in seconds</text>
+    <!-- second stop -->
+    <path d="M444 64 H588" stroke="#ff9a92" stroke-width="4" marker-end="url(#tipr)"/>
+    <text x="516" y="50" font-size="16" fill="#ff9a92" text-anchor="middle">what is left</text>
+    <!-- the lecturer, who has seen the experiment -->
+    <circle cx="640" cy="46" r="19" fill="none" stroke="#ff9a92" stroke-width="4"/>
+    <path d="M612 110 q28 -44 56 0" fill="none" stroke="#ff9a92" stroke-width="4"/>
+    <text x="640" y="150" font-size="19" fill="#ff9a92" text-anchor="middle" font-weight="700">the lecturer</text>
+    <path d="M736 56 h30 v24 l22 42 q4 10 -6 10 h-62 q-10 0 -6 -10 l22 -42 z"
+          fill="none" stroke="#ff9a92" stroke-width="3"/>
+    <text x="700" y="178" font-size="15" fill="#8a8f98" text-anchor="middle">has seen your experiment</text>
+    <defs>
+      <marker id="tipg" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#9ad39a"/></marker>
+      <marker id="tipr" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#ff9a92"/></marker>
+    </defs>
+    <style class="mov">
+      /* One white dot: the question, in "you"'s colour. It crosses the green arrow in
+         about half a second and rests at the LLM's edge -- answered in seconds -- then
+         fades there. What reappears on the far side of the box is six tenths the size and takes
+         three times as long to reach the lecturer: only the remainder travels on. The dot
+         is white with a rim the colour of the background so it reads on both the green
+         and the red arrow without changing colour; a green or red dot would vanish on its
+         own arrow. The jumps at 31-33% and 81-83% happen at opacity 0. */
+      .f26-q { opacity: 0; animation: f26-route 7s ease-in-out infinite; }
+      @keyframes f26-route {
+        0%   { opacity: 0; transform: translate(108px, 64px) scale(1); }
+        5%   { opacity: 1; transform: translate(108px, 64px) scale(1); }
+        9%   { opacity: 1; transform: translate(108px, 64px) scale(1); }
+        18%  { opacity: 1; transform: translate(206px, 64px) scale(1); }
+        27%  { opacity: 1; transform: translate(206px, 64px) scale(1); }
+        31%  { opacity: 0; transform: translate(206px, 64px) scale(1); }
+        33%  { opacity: 0; transform: translate(446px, 64px) scale(.6); }
+        38%  { opacity: 1; transform: translate(446px, 64px) scale(.6); }
+        42%  { opacity: 1; transform: translate(446px, 64px) scale(.6); }
+        68%  { opacity: 1; transform: translate(580px, 64px) scale(.6); }
+        77%  { opacity: 1; transform: translate(580px, 64px) scale(.6); }
+        81%  { opacity: 0; transform: translate(580px, 64px) scale(.6); }
+        83%  { opacity: 0; transform: translate(108px, 64px) scale(1); }
+        100% { opacity: 0; transform: translate(108px, 64px) scale(1); }
+      }
+    </style>
+    <circle class="mov f26-q" r="9" fill="#fff" stroke="#1b1b1b" stroke-width="2"/>
+  </svg>
+</section>
+
+
+<section class="divider" data-background-color="#f2f2ef">
+  <h1>3. Claude Code<br>in practice</h1>
+  <p class="when">SLIDES 25 – 26 · 18 SEPTEMBER · AT YOUR OWN KEYBOARD</p>
+</section>
+
+<section>
+  <span class="sess s2">18 Sep</span>
+  <h2 style="border-color:#4a6b8a">25 — <code>CLAUDE.md</code>: one question, two answers</h2>
+  <p class="small">Same model, same effort, same question &mdash;
+     <code>run fastqc on ALK_L_Z.fastq</code>. The only thing that changes is whether
+     one text file exists.</p>
+  <div class="two">
+    <div><p class="small"><b>no <code>CLAUDE.md</code></b></p>
+      <div class="term" style="font-size:.46em">
+<span class="g">&#9679; I'll install FastQC first.</span>
+<span class="g">&#9679; Bash(conda install -c</span>
+<span class="g">        bioconda fastqc)</span>
+<span class="r">  &#9146; EnvironmentNotWritable</span>
+<span class="g">&#9679; Let me try pip instead...</span>
+      </div></div>
+    <div><p class="small"><b>with <code>CLAUDE.md</code></b></p>
+      <div class="term" style="font-size:.46em">
+<span class="g">&#9679; Bash(source .../lmod_profile</span>
+<span class="g">     &amp;&amp; module load</span>
+<span class="g">        QC/FastQC/0.12.1</span>
+<span class="g">     &amp;&amp; fastqc ALK_L_Z.fastq)</span>
+<span class="g">  &#9146; Analysis complete</span>
+      </div></div>
+  </div>
+
+  <p class="small" style="margin-top:.5em"><b>It is read at startup</b>, from two places,
+     and you can write whatever the agent needs to know into either:</p>
+  <table style="margin-top:.15em">
+    <tr><th style="width:34%">File</th><th>What belongs there</th></tr>
+    <tr class="ok"><td><code>./CLAUDE.md</code>
+        <br><span class="tiny">your working directory, and every directory above it</span></td>
+        <td>this machine: lmod, the module names, never install anything, one thread,
+            the flags our tools need. <b><code>setup_ai.sh</code> writes this one for you</b></td></tr>
+    <tr><td><code>~/.claude/CLAUDE.md</code>
+        <br><span class="tiny">your home — applies to every project</span></td>
+        <td>how <i>you</i> want to be worked with. Yours to write, and it follows you
+            to your own laptop</td></tr>
+  </table>
+  <div class="spine key fragment">The model did not get cleverer. <b>You told it where it is</b>
+    &mdash; in a text file you control.</div>
+  <p class="src">Measured on fgcz-kl-004, 9 Sep 2026, claude-sonnet-5 at medium effort ·
+     load order and locations: code.claude.com/docs/en/memory</p>
+</section>
+
+<section>
+  <span class="sess s2">18 Sep</span>
+  <h2 style="border-color:#4a6b8a">26 — <code>MEMORY.md</code>: the notes it keeps on you</h2>
+  <p class="small">There is a second file, and <b>you do not write this one — it does.</b>
+     Every session starts with an empty head, so it takes notes to carry across.</p>
+
+  <div class="two">
+    <div><h3 style="color:var(--ok)"><code>CLAUDE.md</code></h3>
+      <p class="small" style="margin:0"><b>You</b> write it. Instructions and facts about
+        the machine. Read at startup, every session.</p></div>
+    <div><h3 style="color:var(--cool)"><code>MEMORY.md</code></h3>
+      <p class="small" style="margin:0"><b>It</b> writes it, in
+        <code>~/.claude/projects/…/memory/</code>. What it learned from you: your
+        preferences, your corrections, what this work is about.</p></div>
+  </div>
+
+  <p class="small" style="margin-top:.28em">Correct it <b>once</b>:</p>
+  <div class="term" style="font-size:.46em">
+<span class="u">&gt; don't tell me whether a mapping rate is good. Give me the number</span>
+<span class="u">  and the file you read it from.</span>
+<span class="g">&#9679; Understood.</span>
+<span class="c">  Saved 1 memory</span>
+  </div>
+  <p class="small" style="margin-top:.3em">Tomorrow, in a new session, without being asked:</p>
+  <div class="term" style="font-size:.46em">
+<span class="c">  Recalled 1 memory</span>
+<span class="g">&#9679; 76.58 % uniquely mapped &mdash; star_out/ALK_L_Z/Log.final.out</span>
+  </div>
+
+  <p class="small" style="margin-top:.3em"><code>/memory</code> shows what it saved.
+     <b>Go and read it</b> — it is plain markdown, and yours to edit or delete.</p>
+  <div class="spine key fragment" style="margin-top:.28em">A record of how you work &mdash;
+    <b>not</b> your declaration. That is <code>ai_log.md</code>.</div>
+  <p class="src">code.claude.com/docs/en/memory · the four kinds it saves: your role,
+     corrections you gave it, context about the work, and where to find things ·
+     on by default; <code>/memory</code> turns it off</p>
+</section>
+
+
+<!-- ===================================================================== -->
+<!-- 4. HOW IT FAILS ON OUR DATA                                           -->
+<!--                                                                       -->
+<!-- The worked examples that used to live here (GC content, mapping rate, -->
+<!-- three counting tools, the metadata traps, the missing gene and the    -->
+<!-- interaction) moved into the practicals, where the student runs them   -->
+<!-- on their own data instead of watching them on a slide. Every number   -->
+<!-- on those slides was checked to exist in the gists before removal.     -->
+<!-- The old slides remain in git history.                                 -->
+<!-- ===================================================================== -->
+
+<section class="divider" data-background-color="#f2f2ef">
+  <h1>4. How it fails<br>on our data</h1>
+  <p class="when">SLIDE 27 · 18 SEPTEMBER</p>
+</section>
+
+<section>
+  <span class="sess s2">18 Sep</span>
+  <h2 style="border-color:#7a5c3e">27 — Five ways it will be wrong, and where you meet each</h2>
+  <p class="small">None of these is a slide. Each is an exercise you run at the
+     keyboard, in the practical it belongs to, on your own output.</p>
+  <table>
+    <tr><th style="width:36%">What it looks like</th><th style="width:26%">Practical</th><th>Where</th></tr>
+    <tr><td>A number that looks right
+        <br><span class="tiny">GC content, counted wrong</span></td>
+        <td>Command Practice</td><td>&sect;7 &middot; Q2 &ndash; Q3</td></tr>
+    <tr><td>A rate it calls &ldquo;poor quality&rdquo;
+        <br><span class="tiny">72&ndash;77 % against TAIR10</span></td>
+        <td>Mapping</td><td>&sect;6 &middot; Advanced A2</td></tr>
+    <tr><td>Three tools, three numbers
+        <br><span class="tiny">one gene, one BAM</span></td>
+        <td>Counting</td><td>Q6 &ndash; Q8 &middot; Advanced</td></tr>
+    <tr class="hi"><td><b>The gene that is missing</b>
+        <br><span class="tiny">the paper&rsquo;s own gene, absent from your result</span></td>
+        <td>DEG Analysis</td><td><b>Advanced B</b>
+        <br><span class="tiny">the one to do if you do only one</span></td></tr>
+    <tr><td>A label it inferred instead of reading
+        <br><span class="tiny">the run numbering lies</span></td>
+        <td>Final Practice</td><td>&sect;3</td></tr>
+  </table>
+  <div class="spine key fragment">You meet each one on the day you do that work &mdash; with your
+    own numbers, not with mine.</div>
+</section>
+
+
+<!-- ===================================================================== -->
+<!-- 5. CLOSE                                                              -->
+<!-- ===================================================================== -->
+
+<section class="divider" data-background-color="#f2f2ef">
+  <h1>5. What you<br>are graded on</h1>
+  <p class="when">SLIDES 28 – 31 · 18 SEPTEMBER</p>
+</section>
+
+<section>
+  <span class="sess s2">18 Sep</span>
+  <h2 style="border-color:#5c4a6b">28 — Ask for measurements, not conclusions</h2>
+  <div class="two">
+    <div><h3 style="color:var(--hot)">Don't</h3>
+      <ul class="small">
+        <li>“Is this sample good?”</li>
+        <li>“Is HMA4 upregulated?”</li>
+        <li>“Which tool should I trust?”</li>
+      </ul>
+      <p class="tiny">It will answer all three. Confidently. Without evidence you can check.</p>
+    </div>
+    <div><h3 style="color:var(--ok)">Do</h3>
+      <ul class="small">
+        <li>“Print the per-base quality summary.”</li>
+        <li>“Give me the HMA4 count from all three matrices.”</li>
+        <li>“What would distinguish those two explanations?”</li>
+      </ul>
+      <p class="tiny">Now you have something you can verify, and the judgement stayed yours.</p>
+    </div>
+  </div>
+  <div class="spine key fragment">Every one of the five failures came from asking for a conclusion
+    where a measurement was available.</div>
+  <p class="small dim" style="margin-top:.55em"><b>This is a rule for this course, not for life.</b>
+     Outside it you will set a goal and let an agent run — that is what the tool is for, and it
+     is how most of the work is done. What decides whether that is safe is whether you could
+     catch a wrong answer if one came back. Here the judgement is the thing being examined, so
+     it has to be yours. Later it is yours to delegate — once you can tell a measurement from a
+     verdict without being told which is which.</p>
+</section>
+
+<section>
+  <span class="sess s2">18 Sep</span>
+  <h2 style="border-color:#5c4a6b">29 &mdash; Cognitive debt</h2>
+  <p class="small">Which lane you are in is settled by one question: <b>could you tell if the answer
+     were wrong?</b> When you can, hand it over &mdash; that is what the tool is for. In this course you
+     cannot yet, so every step you accept without following it is <b>borrowed</b>.</p>
+  <div style="margin:.3em 0"><svg class="ill" width="900" height="236" viewBox="0 0 900 236" aria-label="Two lanes. In task execution the agent marker has run to the far end and the you marker is still near the start, with a wide red band between them. In learning the two markers are side by side at the far end, with question marks along the track where the student asked."><text x="12" y="28" font-size="17" font-weight="700" fill="#b3261e">TASK EXECUTION</text><text x="196" y="28" font-size="16" fill="#6a6a6a">&#8212; when you already know how to check the answer</text><rect x="254" y="62" width="522" height="30" fill="#fdf3f2" stroke="#b3261e" stroke-width="2" stroke-dasharray="6 4"/><line x1="150" y1="77" x2="860" y2="77" stroke="#d8d8d8" stroke-width="5"/><text x="515" y="82" font-size="15" fill="#b3261e" text-anchor="middle" font-weight="700">all of this happened, and none of it was checked</text><circle cx="240" cy="77" r="15" fill="#fff" stroke="#1b1b1b" stroke-width="3"/><circle cx="790" cy="77" r="15" fill="#1b1b1b"/><text x="240" y="118" font-size="15" text-anchor="middle">you</text><text x="790" y="118" font-size="15" text-anchor="middle">agent</text><text x="12" y="152" font-size="17" font-weight="700" fill="#2e6f40">LEARNING</text><text x="132" y="152" font-size="16" fill="#6a6a6a">&#8212; when you do not know how to check it yet</text><line x1="150" y1="196" x2="860" y2="196" stroke="#d8d8d8" stroke-width="5"/><text x="320" y="186" font-size="19" fill="#2e6f40" text-anchor="middle" font-weight="700">?</text><text x="440" y="186" font-size="19" fill="#2e6f40" text-anchor="middle" font-weight="700">?</text><text x="560" y="186" font-size="19" fill="#2e6f40" text-anchor="middle" font-weight="700">?</text><text x="672" y="186" font-size="19" fill="#2e6f40" text-anchor="middle" font-weight="700">?</text><text x="860" y="152" font-size="15" fill="#2e6f40" text-anchor="end">you asked at every step &#8212; the gap never opened</text><circle cx="748" cy="196" r="15" fill="#fff" stroke="#1b1b1b" stroke-width="3"/><circle cx="790" cy="196" r="15" fill="#1b1b1b"/><text x="769" y="230" font-size="15" text-anchor="middle">you and it, together</text></svg></div>
+  <div class="trap"><span class="lab">the repayment, cheap while you are still there</span>
+    <b>Ask while it works</b> &mdash; <i>why that flag &middot; what breaks if I drop it</i>.
+    Then read any agent-written command back <b>in your own words</b>.</div>
+  <div class="spine key fragment">You are here to learn, not to deliver &mdash; and on 6 October there is
+    no agent in the room.</div>
+</section>
+
+<section>
+  <span class="sess s2">18 Sep</span>
+  <h2 style="border-color:#5c4a6b">30 — What you are graded on</h2>
+  <ul>
+    <li><b>Not</b> the typing. The agent types faster than all of us.</li>
+    <li><b>Not</b> whether you used AI. You are expected to — and to declare it.</li>
+  </ul>
+  <p style="margin-top:.6em">You are graded on whether you can say
+     <b>what the numbers mean</b> and <b>why you believe them</b>.</p>
+  <div class="spine key fragment">In practice: the “checked” line in your <code>ai_log.md</code>,
+    and your ability to defend a number on 7 October when someone asks where it
+    came from.</div>
+</section>
+
+
+<section data-background-color="#1b1b1b">
+  <h2 style="color:#fff; border-color:#9ad39a">31 — Five lines to keep</h2>
+  <ol style="color:#fff; line-height:1.7; margin-top:.4em">
+    <li>A very fast typist. <span style="color:#8a8f98">Not a biologist.</span></li>
+    <li>What it reads <b style="color:#ff9a92">leaves the machine</b>.
+        <span style="color:#8a8f98">Public data only.</span></li>
+    <li>Tell it where it is. <span style="color:#8a8f98">Most failures are missing premises (context).</span></li>
+    <li>Ask for <b style="color:#9ad39a">measurements</b>, not conclusions.</li>
+    <li>Declare it. <span style="color:#8a8f98">The “checked” line is the one that counts.</span></li>
+  </ol>
+  <p style="color:#8a8f98; font-size:.62em; margin-top:1em">
+    Questions → masaomi.hatakeyama@uzh.ch · github.com/masaomi/EEE338_2026</p>
+</section>
+
+
+<!-- ===================================================================== -->
+<!-- APPENDIX                                                              -->
+<!--                                                                       -->
+<!-- Not shown on 17 or 18 September. Both slides were in the main flow until     -->
+<!-- 13 Sep 2026, when the slot was confirmed as 60 minutes. What it costs  -->
+<!-- is section 10 of the practical page; the map of that page is the page  -->
+<!-- itself. They stay here to be shown on request or after the lecture.    -->
+<!-- ===================================================================== -->
+
+<section class="divider" data-background-color="#f2f2ef">
+  <h1>Appendix</h1>
+  <p class="when">NOT SHOWN IN THE SESSION &middot; ON REQUEST, OR AFTERWARDS</p>
+</section>
+
+<section>
+  <span class="sess" style="background:#8a8a84">appendix</span>
+  <h2>A1 — What it costs</h2>
+
+  <div class="meas"><span class="lab">measured on fgcz-kl-004, 9 Sep 2026 · Sonnet 5, medium effort</span>
+    One question, with the course <code>CLAUDE.md</code> loaded: <b>$0.042 – 0.044</b>.
+    Without it: <b>$0.025 – 0.028</b>.</div>
+
+  <p class="small" style="margin-top:.45em">Every turn re-sends the whole conversation.
+     Most of it comes back from a <b>cache</b> at a tenth of the price — but that cache
+     is built from scratch each time you start a new conversation.</p>
+
+  <table>
+    <tr><th style="width:22%">Command</th><th>What it does</th><th style="width:32%">Use it when</th></tr>
+    <tr><td><code>/usage</code></td><td>tokens and money spent so far</td><td>any time</td></tr>
+    <tr><td><code>/compact</code></td><td>shrink the context, keep the thread</td><td>the session got long</td></tr>
+    <tr><td><code>/clear</code></td><td>start over, empty context</td><td><b>you changed subject</b></td></tr>
+  </table>
+
+  <div class="trap"><span class="lab">the habit that is not free</span>
+    <code>/clear</code> throws the cache away, and the next question pays to rebuild it —
+    <b>11,000 – 19,000 tokens</b>. Clear when the topic changes, not every few minutes.</div>
+  <p class="src">Measured with <code>claude -p --output-format json</code> on fgcz-kl-004,
+     9 Sep 2026, <code>claude-sonnet-5</code> at medium effort</p>
+</section>
+
+<!-- ===================================================================== -->
+<!-- 3. CLAUDE CODE IN PRACTICE                                            -->
+<!--                                                                       -->
+<!-- Was thirteen slides shown live (recap, the screen, permission modes,   -->
+<!-- plan mode, /model, /effort, slash commands, long sessions, CLAUDE.md,  -->
+<!-- the two demo slides, the deny list, when it stops working). On         -->
+<!-- 13 Sep 2026 the 17 Sep slot was confirmed as 60 minutes with no        -->
+<!-- keyboard block, so they were folded into two: the experiment, which    -->
+<!-- the closing slide's third line depends on, and a map of the page that  -->
+<!-- now carries the rest. Every removed slide has a section in the gist    -->
+<!-- EEE338_2026_Claude_Code - checked section by section before removal.   -->
+<!-- Controls: removed_section3_20260913.html.bak, and git history.         -->
+<!-- ===================================================================== -->
+
+<section>
+  <span class="sess" style="background:#8a8a84">appendix</span>
+  <h2 style="border-color:#4a6b8a">A2 — The rest is two pages, not slides</h2>
+  <table>
+    <tr><th style="width:22%">On the pages</th><th>What it is for
+        <span class="tiny" style="font-weight:400">&mdash; each page numbers its own sections from 1</span></th></tr>
+    <tr><td><b>part 1</b>, all of it</td>
+        <td>install, your key, the first screen &mdash; and leaving and coming back.
+            The written version of what we did together</td></tr>
+    <tr class="ok"><td><b>part 2</b> &sect;1 &ndash; &sect;4</td>
+        <td>the loop, permission modes, <b>plan mode</b>, model and effort</td></tr>
+    <tr><td><b>part 2</b> &sect;5</td>
+        <td>what a conversation costs</td></tr>
+    <tr class="hi"><td><b>part 2</b> &sect;6</td>
+        <td><b>slide 24, with your own hands</b> &mdash; and <code>CLAUDE.md</code> arrives
+            in the middle of it, between the failure and the fix</td></tr>
+    <tr><td><b>part 2</b> &sect;7 &ndash; &sect;12</td>
+        <td>permissions, what to do when it stops, the log, the exercises, and
+            <b>subagents</b></td></tr>
+  </table>
+  <div class="trap" style="margin-top:.4em"><span class="lab">three things that are not negotiable on this node</span>
+    <b>Plan mode first</b> &mdash; read the plan while nothing has run yet. &middot;
+    <b>Never <code>auto</code> mode</b> &mdash; it lets a classifier decide for you, and the
+    judgement is the thing you are graded on. &middot;
+    <b><code>--dangerously-skip-permissions</code> is forbidden</b> &mdash; ten people share
+    <code>/scratch</code>.</div>
+  <table style="margin-top:.25em">
+    <tr><th style="width:46%">Page <span class="tiny" style="font-weight:400">&mdash;
+        an unlisted link, given at the session that uses it</span></th><th>When</th></tr>
+    <tr class="ok"><td><code>EEE338_2026_Claude_Code_part1</code></td>
+        <td><b>17 Sep</b>, with the hour</td></tr>
+    <tr class="ok"><td><code>EEE338_2026_Claude_Code_part2</code></td>
+        <td><b>18 Sep</b>, at your own keyboard</td></tr>
+    <tr><td><code>EEE338_2026_Command_Practice</code></td>
+        <td>&sect;3&ndash;&sect;5 <b>by hand, no agent</b></td></tr>
+  </table>
+  <!-- A third column used to sit here, holding the link to each page. A gist
+       URL is 63 characters and the column was 24% of the slide, so it wrapped
+       to three lines on a slide that has none to spare. Each link is now on
+       the divider that opens its own session, which is where the room needs it
+       anyway, and the note moved into the header the way the table above does
+       it -- a separate line cost 30px and put the spine at 790 of 800. -->
+
+  <div class="spine" style="font-size:.86em; margin-top:.3em">You cannot build a mental model
+    of a file system by watching something else navigate it.</div>
+</section>
+
+
+</div></div>
+
+<script src="vendor/reveal.js/dist/reveal.js"></script>
+<script src="vendor/reveal.js/plugin/notes/notes.js"></script>
+<script src="vendor/reveal.js/plugin/highlight/highlight.js"></script>
+<script>
+Reveal.initialize({
+  keyboard: { 13: 'next' },   // Enter also advances (fragments and slides); Space already does
+
+  hash: true,
+  slideNumber: 'c/t',
+  width: 1280, height: 800,
+  margin: 0.06,
+  minScale: 0.2, maxScale: 1.6,
+  transition: 'none',
+  plugins: [ RevealNotes, RevealHighlight ]
+});
+</script>
+</body>
+</html>
