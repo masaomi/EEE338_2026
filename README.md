@@ -9,6 +9,27 @@ arriving complete.
 
 ----
 
+## Opening the slides
+
+Every deck here is a [reveal.js](https://revealjs.com) file. **GitHub shows you
+its source, not the slides** — so open them from the pages site instead:
+
+> ### **<https://masaomi.github.io/EEE338_2026/>**
+
+Nothing on that site is fetched from anywhere else: no fonts, no scripts, no
+images from a CDN. Once a deck has loaded it keeps working with the network off,
+and it will still work years from now.
+
+To have them on your own disk instead — for the train, or for after the course —
+clone the repository and open the files directly:
+
+```sh
+ $ git clone https://github.com/masaomi/EEE338_2026.git
+ $ open EEE338_2026/slides/EEE338_2026_Linux_slides.html
+```
+
+----
+
 ## What is here
 
 ### Thursday 17 September — AI Agents for Bioinformatics, part 1
@@ -17,22 +38,8 @@ The one-hour lecture, and the setup that goes with it.
 
 | | |
 |---|---|
+| [**the deck**](https://masaomi.github.io/EEE338_2026/slides/EEE338_2026_AI_Agents_part1.html) | as shown in the room |
 | [`slides/EEE338_2026_AI_Agents_part1.md`](slides/EEE338_2026_AI_Agents_part1.md) | **the reading version** — all 23 slides written out, reads straight on GitHub |
-| `slides/EEE338_2026_AI_Agents_part1.html` | the deck itself, as shown in the room |
-
-The reading version is the one to open on this page. The `.html` is a
-[reveal.js](https://revealjs.com) deck: GitHub shows you its source rather than
-the slides, so to see it as slides, get a copy of this repository and open the
-file in a browser.
-
-```sh
- $ git clone https://github.com/masaomi/EEE338_2026.git
- $ open EEE338_2026/slides/EEE338_2026_AI_Agents_part1.html
-```
-
-It has **no external references** — no fonts, scripts or stylesheets fetched
-from anywhere — so it works with the network off, and it will still work years
-from now.
 
 ### Friday 18 September — NGS Bioinformatics, and Linux
 
@@ -40,23 +47,14 @@ The two morning lectures.
 
 | | |
 |---|---|
-| `slides/EEE338_2026_NGS_Bioinformatics_slides.html` | sequencing, FASTQ and FASTA, Phred quality, FastQC |
-| `slides/EEE338_2026_NGS_Bioinformatics.html` | the same thing as one page to scroll |
-| `slides/EEE338_2026_Linux_slides.html` | the operating system, the shell, the file system, commands, shell scripts, AI agents |
-| `slides/EEE338_2026_Linux.html` | the same thing as one page to scroll |
+| [**NGS Bioinformatics**](https://masaomi.github.io/EEE338_2026/slides/EEE338_2026_NGS_Bioinformatics_slides.html) · [one page to scroll](https://masaomi.github.io/EEE338_2026/slides/EEE338_2026_NGS_Bioinformatics.html) | sequencing, FASTQ and FASTA, Phred quality, FastQC |
+| [**Linux**](https://masaomi.github.io/EEE338_2026/slides/EEE338_2026_Linux_slides.html) · [one page to scroll](https://masaomi.github.io/EEE338_2026/slides/EEE338_2026_Linux.html) | the operating system, the shell, the file system, commands, shell scripts, AI agents |
 
 Unlike part 1 above, these two have no markdown version — the reading page is
-HTML as well. **Both are files to open, not pages GitHub will render**, so clone
-and open them:
-
-```sh
- $ git clone https://github.com/masaomi/EEE338_2026.git
- $ open EEE338_2026/slides/EEE338_2026_NGS_Bioinformatics.html
-```
+HTML as well, so use the links.
 
 The figures they use are in `png/` and the four FastQC reports they link to are
-in `fastqc_examples/`. No external references here either: with the repository
-on your disk, everything works offline.
+in `fastqc_examples/`.
 
 > The exercises are in the decks; the worked answers are not. They are shown in
 > the room. Work them out first — the point of an exercise you can look up is
