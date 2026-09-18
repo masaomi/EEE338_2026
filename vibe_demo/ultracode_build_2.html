@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SPACE INVADERS</title>
+<style>
+html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;}
+body{display:flex;align-items:center;justify-content:center;background:#000;
+     -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;}
+canvas{display:block;background:#000;image-rendering:pixelated;image-rendering:crisp-edges;}
+</style>
+</head>
+<body>
+<canvas id="c" width="224" height="256"></canvas>
+<script>
+(function () {
+  'use strict';
+
+  /* =====================================================================
+     0.  Fatal-guard.  Nothing below may leave the canvas black in silence.
+     ===================================================================== */
+  function panic(err) {
+    try {
+      var cv = document.getElementById('c');
+      var g = cv.getContext('2d');
+      cv.width = 448; cv.height = 512;
+      cv.style.width = '448px'; cv.style.height = '512px';
+      g.fillStyle = '#000'; g.fillRect(0, 0, 448, 512);
+      g.fillStyle = '#ff3b30';
+      g.font = '14px monospace';
+      g.fillText('SPACE INVADERS FAILED TO START', 20, 40);
+      g.fillStyle = '#fff';
+      var msg = String(err && (err.stack || err.message) || err);
+      var lines = msg.split('\n');
+      for (var i = 0; i < lines.length && i < 20; i++) {
+        g.fillText(lines[i].slice(0, 52), 20, 70 + i * 18);
+      }
+    } catch (e) { /* nothing left to try */ }
+  }
+
+  /* =====================================================================
+     1.  Geometry, palette, constants.  All units are logical playfield units.
+     ===================================================================== */
+  var W = 224, H = 256;
+
+  var C_BLACK = '#000000';
+  var C_GREEN = '#33ef5b';
+  var C_GREEN_D = '#17853a';
+  var C_WHITE = '#ffffff';
+  var C_RED = '#ff3b30';
+  var C_AMBER = '#ffd23c';
+
+  var EDGE = 8;            // formation turn-around margin
+  var MARGIN = 10;         // player clamp margin
+  var GROUND_Y = 239;      // green ground line
+  var PLAYER_Y = 230;      // top of the ship sprite
+  var BUNKER_Y = 202;
+  var SAUCER_Y = 26;
+  var SHOT_TOP = 20;       // player shot dies above this line
+
+  var FORM_X0 = 24;        // 11 columns * 16 = 176 wide, centred in 224
+  var FORM_Y0 = 58;
+  var COLS = 11, ROWS = 5;
+  var CELL = 16;
+
+  var PLAYER_SPEED = 70;   // units / second
+  var BULLET_SPEED = 240;
+  var BOMB_SPEED = 80;
+  var BOMB_FAST_SPEED = 145;
+  var SAUCER_SPEED = 42;
+
+  var DT = 1 / 60;
+
+  var SAUCER_TABLE = [100, 50, 50, 100, 150, 100, 100, 50, 300, 100, 100, 100, 50, 150, 100];
+  var POINTS = [30, 20, 10];
+
+  /* =====================================================================
+     2.  Sprite patterns.  '0' is an on pixel, anything else is off.
+     ===================================================================== */
+  var P_SMALL_A = [
+    '...00...',
+    '..0000..',
+    '.000000.',
+    '00.00.00',
+    '00000000',
+    '..0..0..',
+    '.0.00.0.',
+    '0.0..0.0'
+  ];
+  var P_SMALL_B = [
+    '...00...',
+    '..0000..',
+    '.000000.',
+    '00.00.00',
+    '00000000',
+    '.0.00.0.',
+    '0......0',
+    '.0....0.'
+  ];
+  var P_MED_A = [
+    '..0.....0..',
+    '...0...0...',
+    '..0000000..',
+    '.00.000.00.',
+    '00000000000',
+    '0.0000000.0',
+    '0.0.....0.0',
+    '...00.00...'
+  ];
+  var P_MED_B = [
+    '..0.....0..',
+    '0..0...0..0',
+    '0.0000000.0',
+    '000.000.000',
+    '00000000000',
+    '.000000000.',
+    '..0.....0..',
+    '.0.......0.'
+  ];
+  var P_BIG_A = [
+    '....0000....',
+    '.0000000000.',
+    '000000000000',
+    '000..00..000',
+    '000000000000',
+    '..00.00.00..',
+    '.00......00.',
+    '...00..00...'
+  ];
+  var P_BIG_B = [
+    '....0000....',
+    '.0000000000.',
+    '000000000000',
+    '000..00..000',
+    '000000000000',
+    '...000000...',
+    '..00.00.00..',
+    '.00.0..0.00.'
+  ];
+  var P_INV_BOOM = [
+    '...0.....0...',
+    '0...0...0...0',
+    '.0...0.0...0.',
+    '..00.000.00..',
+    '.00.00000.00.',
+    '..00.000.00..',
+    '.0...0.0...0.',
+    '0...0...0...0'
+  ];
+  var P_SHIP = [
+    '......0......',
+    '.....000.....',
+    '.....000.....',
+    '.00000000000.',
+    '0000000000000',
+    '0000000000000',
+    '0000000000000',
+    '0000000000000'
+  ];
+  var P_SHIP_BOOM_A = [
+    '..0..0..0....',
+    '0..0...0..0..',
+    '.0..0.0...0.0',
+    '0.0...0..0...',
+    '..0.0...0..0.',
+    '.0...0.0...0.',
+    '0..0...0..0.0',
+    '.0..0.0...0..'
+  ];
+  var P_SHIP_BOOM_B = [
+    '.0...0..0..0.',
+    '0..0.0...0..0',
+    '..0...0.0...0',
+    '.0.0...0..0..',
+    '0...0.0...0.0',
+    '..0.0...0..0.',
+    '.0..0..0...0.',
+    '0..0.0...0..0'
+  ];
+  var P_SAUCER = [
+    '.....000000.....',
+    '...0000000000...',
+    '..000000000000..',
+    '.00.00.00.00.00.',
+    '0000000000000000',
+    '..00..0000..00..',
+    '...00......00...'
+  ];
+  var P_BOMB_A = ['..0', '.0.', '0..', '.0.', '..0', '.0.', '0..'];
+  var P_BOMB_B = ['0..', '.0.', '..0', '.0.', '0..', '.0.', '..0'];
+  var P_FAST_A = ['.0.', '.0.', '000', '.0.', '.0.', '000', '.0.'];
+  var P_FAST_B = ['.0.', '000', '.0.', '.0.', '000', '.0.', '.0.'];
+  var P_SPARK = ['0.0.0', '.000.', '00000', '.000.', '0.0.0'];
+
+  /* =====================================================================
+     3.  Bitmap font.  5 x 7 cells, one unit per pixel, 6-unit advance.
+     ===================================================================== */
+  var FONT = {
+    'A': ['.000.', '0...0', '0...0', '00000', '0...0', '0...0', '0...0'],
+    'B': ['0000.', '0...0', '0...0', '0000.', '0...0', '0...0', '0000.'],
+    'C': ['.0000', '0....', '0....', '0....', '0....', '0....', '.0000'],
+    'D': ['0000.', '0...0', '0...0', '0...0', '0...0', '0...0', '0000.'],
+    'E': ['00000', '0....', '0....', '0000.', '0....', '0....', '00000'],
+    'F': ['00000', '0....', '0....', '0000.', '0....', '0....', '0....'],
+    'G': ['.0000', '0....', '0....', '0..00', '0...0', '0...0', '.0000'],
+    'H': ['0...0', '0...0', '0...0', '00000', '0...0', '0...0', '0...0'],
+    'I': ['00000', '..0..', '..0..', '..0..', '..0..', '..0..', '00000'],
+    'J': ['....0', '....0', '....0', '....0', '0...0', '0...0', '.000.'],
+    'K': ['0...0', '0..0.', '0.0..', '00...', '0.0..', '0..0.', '0...0'],
+    'L': ['0....', '0....', '0....', '0....', '0....', '0....', '00000'],
+    'M': ['0...0', '00.00', '0.0.0', '0...0', '0...0', '0...0', '0...0'],
+    'N': ['0...0', '00..0', '0.0.0', '0..00', '0...0', '0...0', '0...0'],
+    'O': ['.000.', '0...0', '0...0', '0...0', '0...0', '0...0', '.000.'],
+    'P': ['0000.', '0...0', '0...0', '0000.', '0....', '0....', '0....'],
+    'Q': ['.000.', '0...0', '0...0', '0...0', '0.0.0', '0..0.', '.00.0'],
+    'R': ['0000.', '0...0', '0...0', '0000.', '0.0..', '0..0.', '0...0'],
+    'S': ['.0000', '0....', '0....', '.000.', '....0', '....0', '0000.'],
+    'T': ['00000', '..0..', '..0..', '..0..', '..0..', '..0..', '..0..'],
+    'U': ['0...0', '0...0', '0...0', '0...0', '0...0', '0...0', '.000.'],
+    'V': ['0...0', '0...0', '0...0', '0...0', '0...0', '.0.0.', '..0..'],
+    'W': ['0...0', '0...0', '0...0', '0...0', '0.0.0', '00.00', '0...0'],
+    'X': ['0...0', '0...0', '.0.0.', '..0..', '.0.0.', '0...0', '0...0'],
+    'Y': ['0...0', '0...0', '.0.0.', '..0..', '..0..', '..0..', '..0..'],
+    'Z': ['00000', '....0', '...0.', '..0..', '.0...', '0....', '00000'],
+    '0': ['.000.', '0...0', '0..00', '0.0.0', '00..0', '0...0', '.000.'],
+    '1': ['..0..', '.00..', '..0..', '..0..', '..0..', '..0..', '.000.'],
+    '2': ['.000.', '0...0', '....0', '...0.', '..0..', '.0...', '00000'],
+    '3': ['00000', '...0.', '..0..', '...0.', '....0', '0...0', '.000.'],
+    '4': ['...0.', '..00.', '.0.0.', '0..0.', '00000', '...0.', '...0.'],
+    '5': ['00000', '0....', '0000.', '....0', '....0', '0...0', '.000.'],
+    '6': ['..00.', '.0...', '0....', '0000.', '0...0', '0...0', '.000.'],
+    '7': ['00000', '....0', '...0.', '..0..', '.0...', '.0...', '.0...'],
+    '8': ['.000.', '0...0', '0...0', '.000.', '0...0', '0...0', '.000.'],
+    '9': ['.000.', '0...0', '0...0', '.0000', '....0', '...0.', '.00..'],
+    ' ': ['.....', '.....', '.....', '.....', '.....', '.....', '.....'],
+    '-': ['.....', '.....', '.....', '00000', '.....', '.....', '.....'],
+    '.': ['.....', '.....', '.....', '.....', '.....', '.00..', '.00..'],
+    ',': ['.....', '.....', '.....', '.....', '.00..', '.00..', '.0...'],
+    '!': ['..0..', '..0..', '..0..', '..0..', '..0..', '.....', '..0..'],
+    '?': ['.000.', '0...0', '....0', '...0.', '..0..', '.....', '..0..'],
+    ':': ['.....', '.00..', '.00..', '.....', '.00..', '.00..', '.....'],
+    '=': ['.....', '.....', '00000', '.....', '00000', '.....', '.....'],
+    '+': ['.....', '..0..', '..0..', '00000', '..0..', '..0..', '.....'],
+    '<': ['...0.', '..0..', '.0...', '0....', '.0...', '..0..', '...0.'],
+    '>': ['.0...', '..0..', '...0.', '....0', '...0.', '..0..', '.0...'],
+    '*': ['.....', '0.0.0', '.000.', '00000', '.000.', '0.0.0', '.....'],
+    '(': ['...0.', '..0..', '.0...', '.0...', '.0...', '..0..', '...0.'],
+    ')': ['.0...', '..0..', '...0.', '...0.', '...0.', '..0..', '.0...'],
+    '/': ['....0', '....0', '...0.', '..0..', '.0...', '0....', '0....'],
+    "'": ['..0..', '..0..', '.....', '.....', '.....', '.....', '.....']
+  };
+
+  /* =====================================================================
+     4.  Canvas, integer scaling, sprite pre-render.
+     ===================================================================== */
+  var cv = document.getElementById('c');
+  var ctx = cv.getContext('2d', { alpha: false });
+  var pxScale = 2;
+
+  function resize() {
+    var vw = Math.max(120, window.innerWidth || 640);
+    var vh = Math.max(120, window.innerHeight || 480);
+    var s = Math.floor(Math.min((vw - 12) / W, (vh - 12) / H));
+    if (!isFinite(s) || s < 1) s = 1;
+    var dpr = window.devicePixelRatio || 1;
+    var d = Math.max(1, Math.min(3, Math.round(dpr)));
+    pxScale = s * d;
+    cv.width = W * pxScale;
+    cv.height = H * pxScale;
+    cv.style.width = (W * s) + 'px';
+    cv.style.height = (H * s) + 'px';
+    ctx.imageSmoothingEnabled = false;
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.setTransform(pxScale, 0, 0, pxScale, 0, 0);
+  }
+
+  function makeSprite(rows, color) {
+    var h = rows.length, w = rows[0].length;
+    var c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    var g = c.getContext('2d');
+    g.fillStyle = color;
+    for (var y = 0; y < h; y++) {
+      var r = rows[y];
+      for (var x = 0; x < w; x++) {
+        if (r.charCodeAt(x) === 48) g.fillRect(x, y, 1, 1);
+      }
+    }
+    return { img: c, w: w, h: h };
+  }
+
+  var SPR = {};
+  function buildSprites() {
+    SPR.inv = [
+      [makeSprite(P_SMALL_A, C_WHITE), makeSprite(P_SMALL_B, C_WHITE)],
+      [makeSprite(P_MED_A, C_WHITE), makeSprite(P_MED_B, C_WHITE)],
+      [makeSprite(P_BIG_A, C_WHITE), makeSprite(P_BIG_B, C_WHITE)]
+    ];
+    SPR.invBoom = makeSprite(P_INV_BOOM, C_WHITE);
+    SPR.ship = makeSprite(P_SHIP, C_GREEN);
+    SPR.shipIcon = makeSprite(P_SHIP, C_GREEN_D);
+    SPR.shipBoom = [makeSprite(P_SHIP_BOOM_A, C_GREEN), makeSprite(P_SHIP_BOOM_B, C_GREEN)];
+    SPR.saucer = makeSprite(P_SAUCER, C_RED);
+    SPR.bomb = [makeSprite(P_BOMB_A, C_WHITE), makeSprite(P_BOMB_B, C_WHITE)];
+    SPR.fast = [makeSprite(P_FAST_A, C_AMBER), makeSprite(P_FAST_B, C_AMBER)];
+    SPR.spark = makeSprite(P_SPARK, C_WHITE);
+  }
+
+  var INV_W = [8, 11, 12];
+  var INV_OFF = [4, 2, 2];
+  var INV_H = 8;
+
+  var glyphCache = {};
+  function glyph(ch, color) {
+    var k = ch + '|' + color;
+    var g = glyphCache[k];
+    if (g) return g;
+    g = makeSprite(FONT[ch] || FONT[' '], color);
+    glyphCache[k] = g;
+    return g;
+  }
+  function textW(s, sc) { sc = sc || 1; return String(s).length * 6 * sc - sc; }
+  function drawText(s, x, y, color, sc) {
+    sc = sc || 1;
+    s = String(s).toUpperCase();
+    x = Math.round(x); y = Math.round(y);
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charAt(i);
+      if (ch === ' ') continue;
+      var g = glyph(ch, color);
+      ctx.drawImage(g.img, x + i * 6 * sc, y, g.w * sc, g.h * sc);
+    }
+  }
+  function drawTextC(s, y, color, sc) {
+    drawText(s, Math.round((W - textW(s, sc)) / 2), y, color, sc);
+  }
+  function pad(n, w) {
+    var s = String(Math.max(0, Math.floor(n)));
+    while (s.length < w) s = '0' + s;
+    return s;
+  }
+
+  /* =====================================================================
+     5.  Audio.  Lazily created on the first key press, silent if unavailable.
+     ===================================================================== */
+  var Sfx = (function () {
+    var actx = null, master = null, noiseBuf = null;
+    var available = true, muted = false;
+    var sOsc = null, sGain = null, sLfo = null;
+    var VOL = 0.22;
+
+    function unlock() {
+      if (!available) return;
+      try {
+        if (!actx) {
+          var AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) { available = false; return; }
+          actx = new AC();
+          master = actx.createGain();
+          master.gain.value = muted ? 0 : VOL;
+          master.connect(actx.destination);
+          var n = Math.floor(actx.sampleRate * 0.6);
+          noiseBuf = actx.createBuffer(1, n, actx.sampleRate);
+          var d = noiseBuf.getChannelData(0);
+          for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+        }
+        if (actx.state === 'suspended' && actx.resume) actx.resume();
+      } catch (e) { available = false; actx = null; }
+    }
+
+    function tone(f1, f2, dur, type, vol, delay) {
+      if (!actx || muted) return;
+      try {
+        var t = actx.currentTime + (delay || 0);
+        var o = actx.createOscillator();
+        o.type = type || 'square';
+        o.frequency.setValueAtTime(f1, t);
+        if (f2 && f2 !== f1) o.frequency.linearRampToValueAtTime(f2, t + dur);
+        var g = actx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(vol == null ? 0.3 : vol, t + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+        o.connect(g); g.connect(master);
+        o.start(t); o.stop(t + dur + 0.03);
+      } catch (e) { }
+    }
+
+    function noise(dur, vol, f0, f1) {
+      if (!actx || muted || !noiseBuf) return;
+      try {
+        var t = actx.currentTime;
+        var src = actx.createBufferSource();
+        src.buffer = noiseBuf;
+        src.loop = true;
+        var bq = actx.createBiquadFilter();
+        bq.type = 'lowpass';
+        bq.frequency.setValueAtTime(f0, t);
+        bq.frequency.exponentialRampToValueAtTime(Math.max(60, f1), t + dur);
+        var g = actx.createGain();
+        g.gain.setValueAtTime(vol, t);
+        g.gain.exponentialRampToValueAtTime(0.0008, t + dur);
+        src.connect(bq); bq.connect(g); g.connect(master);
+        src.start(t); src.stop(t + dur + 0.02);
+      } catch (e) { }
+    }
+
+    var MARCH = [116, 105, 95, 86];
+    return {
+      unlock: unlock,
+      isMuted: function () { return muted; },
+      toggleMute: function () {
+        muted = !muted;
+        try { if (master) master.gain.value = muted ? 0 : VOL; } catch (e) { }
+        if (muted) saucerStop();
+      },
+      march: function (i) {
+        var f = MARCH[i & 3];
+        tone(f, f * 0.9, 0.11, 'square', 0.4);
+      },
+      shoot: function () { tone(1250, 320, 0.13, 'sawtooth', 0.16); },
+      invaderDie: function () {
+        noise(0.24, 0.3, 2600, 260);
+        tone(340, 90, 0.2, 'square', 0.14);
+      },
+      playerDie: function () {
+        noise(0.85, 0.42, 1800, 90);
+        tone(260, 45, 0.7, 'sawtooth', 0.2);
+      },
+      bunkerHit: function () { noise(0.07, 0.12, 1800, 500); },
+      extraLife: function () {
+        tone(523, 523, 0.10, 'square', 0.22, 0.00);
+        tone(659, 659, 0.10, 'square', 0.22, 0.10);
+        tone(784, 784, 0.10, 'square', 0.22, 0.20);
+        tone(1047, 1047, 0.22, 'square', 0.22, 0.30);
+      },
+      saucerScore: function () { tone(500, 1400, 0.3, 'square', 0.18); },
+      saucerStart: function () {
+        if (!actx || muted || sOsc) return;
+        try {
+          var t = actx.currentTime;
+          sOsc = actx.createOscillator(); sOsc.type = 'square';
+          sOsc.frequency.setValueAtTime(620, t);
+          sLfo = actx.createOscillator(); sLfo.type = 'sine';
+          sLfo.frequency.setValueAtTime(13, t);
+          var depth = actx.createGain(); depth.gain.value = 190;
+          sLfo.connect(depth); depth.connect(sOsc.frequency);
+          sGain = actx.createGain();
+          sGain.gain.setValueAtTime(0.0001, t);
+          sGain.gain.linearRampToValueAtTime(0.12, t + 0.05);
+          sOsc.connect(sGain); sGain.connect(master);
+          sOsc.start(t); sLfo.start(t);
+        } catch (e) { sOsc = null; }
+      },
+      saucerStop: saucerStop
+    };
+
+    function saucerStop() {
+      if (!actx || !sOsc) return;
+      try {
+        var t = actx.currentTime;
+        sGain.gain.cancelScheduledValues(t);
+        sGain.gain.setValueAtTime(sGain.gain.value, t);
+        sGain.gain.exponentialRampToValueAtTime(0.0008, t + 0.06);
+        sOsc.stop(t + 0.09);
+        sLfo.stop(t + 0.09);
+      } catch (e) { }
+      sOsc = null; sLfo = null; sGain = null;
+    }
+  })();
+
+  /* =====================================================================
+     6.  Input.  Held set + a small press queue so fast taps are never lost.
+     ===================================================================== */
+  var keys = {}, tapped = {};
+  var pendingFire = 0, pendingAction = 0, pendingActionT = -99;
+
+  function norm(e) {
+    switch (e.key) {
+      case 'ArrowLeft': case 'Left': return 'L';
+      case 'ArrowRight': case 'Right': return 'R';
+      case 'ArrowUp': case 'Up': return 'U';
+      case 'ArrowDown': case 'Down': return 'D';
+      case ' ': case 'Spacebar': return 'F';
+      case 'Enter': return 'E';
+      case 'p': case 'P': return 'P';
+      case 'm': case 'M': return 'M';
+    }
+    if (e.code === 'Space') return 'F';
+    if (e.code === 'ArrowLeft') return 'L';
+    if (e.code === 'ArrowRight') return 'R';
+    if (e.code === 'ArrowUp') return 'U';
+    if (e.code === 'ArrowDown') return 'D';
+    return '';
+  }
+
+  function onKeyDown(e) {
+    var k = norm(e);
+    if (!k) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;   // leave browser shortcuts alone
+    if (k === 'L' || k === 'R' || k === 'U' || k === 'D' || k === 'F') {
+      if (e.preventDefault) e.preventDefault();
+    }
+    Sfx.unlock();
+    keys[k] = true;
+    tapped[k] = true;
+    if (e.repeat) return;                              // edge-triggered from here down
+    if (k === 'U' || k === 'F') { pendingFire = Math.min(2, pendingFire + 1); }
+    if (k === 'L' || k === 'R' || k === 'U' || k === 'D' || k === 'F' || k === 'E') {
+      // latched, not per-frame: a press during a state's short lock-out is
+      // honoured a few frames later instead of being silently dropped
+      pendingAction = 1;
+      pendingActionT = timeNow;
+    }
+    if (k === 'P') togglePause();
+    if (k === 'M') Sfx.toggleMute();
+  }
+  function onKeyUp(e) {
+    var k = norm(e);
+    if (!k) return;
+    keys[k] = false;
+  }
+
+  /* =====================================================================
+     7.  Game state.
+     ===================================================================== */
+  var state = 'TITLE', stateTime = 0, timeNow = 0;
+  var paused = false, autoPaused = false;
+
+  var score = 0, hiScore = 0, startHi = 0, newHigh = false;
+  var lives = 3, wave = 1, bonusGiven = false, shotCounter = 0;
+
+  var inv = [], aliveN = 0;
+  var fx = FORM_X0, fy = FORM_Y0, formDir = 1, formTimer = 0, frameFlip = 0, marchIdx = 0;
+
+  var player = { x: 20, alive: true, inv: 0, deathT: 0 };
+  var bullet = null;
+  var bombs = [];
+  var bombTimer = 2;
+  var booms = [];        // invader explosions and sparks
+  var floats = [];       // floating score numbers
+  var saucer = null, saucerTimer = 22, saucerSide = 0;
+
+  try {
+    var stored = window.localStorage.getItem('si_hiscore_v1');
+    if (stored) hiScore = parseInt(stored, 10) || 0;
+  } catch (e) { hiScore = 0; }
+  function saveHi() {
+    try { window.localStorage.setItem('si_hiscore_v1', String(hiScore)); } catch (e) { }
+  }
+
+  /* ---- bunkers ---- */
+  var BW = 22, BH = 16;
+  var BUNKER_X = [17, 73, 129, 185];
+  var bunkers = [];
+
+  function bunkerShape(x, y) {
+    var left = y < 4 ? [6, 4, 2, 1][y] : 0;
+    if (x < left || x > BW - 1 - left) return 0;
+    if (y >= 10) {
+      var half = 0.5 + (y - 10) * 0.85;
+      if (Math.abs(x - (BW - 1) / 2) <= half) return 0;
+    }
+    return 1;
+  }
+  function buildBunkers() {
+    bunkers = [];
+    for (var i = 0; i < 4; i++) {
+      var cells = new Uint8Array(BW * BH);
+      for (var y = 0; y < BH; y++) {
+        for (var x = 0; x < BW; x++) cells[y * BW + x] = bunkerShape(x, y);
+      }
+      var c = document.createElement('canvas');
+      c.width = BW; c.height = BH;
+      bunkers.push({
+        x: BUNKER_X[i], y: BUNKER_Y, cells: cells,
+        canvas: c, cx: c.getContext('2d'), dirty: true
+      });
+    }
+  }
+
+  var DMG = ['.212.', '21112', '11111', '21112', '.2.2.'];
+  function erode(b, cx, cy, up) {
+    var yoff = up ? -3 : -1;
+    for (var r = 0; r < 5; r++) {
+      var row = DMG[r];
+      for (var c = 0; c < 5; c++) {
+        var ch = row.charAt(c);
+        if (ch === '.') continue;
+        if (ch === '2' && Math.random() < 0.45) continue;
+        var x = cx + c - 2, y = cy + r + yoff;
+        if (x < 0 || x >= BW || y < 0 || y >= BH) continue;
+        b.cells[y * BW + x] = 0;
+      }
+    }
+    b.dirty = true;
+  }
+
+  // Finds the first live bunker cell a rect touches.  fromBelow: scan upward.
+  function bunkerProbe(rx, ry, rw, rh, fromBelow) {
+    for (var i = 0; i < bunkers.length; i++) {
+      var b = bunkers[i];
+      if (rx + rw <= b.x || rx >= b.x + BW || ry + rh <= b.y || ry >= b.y + BH) continue;
+      var x0 = Math.max(0, Math.floor(rx - b.x));
+      var x1 = Math.min(BW - 1, Math.ceil(rx + rw - 1 - b.x));
+      var y0 = Math.max(0, Math.floor(ry - b.y));
+      var y1 = Math.min(BH - 1, Math.ceil(ry + rh - 1 - b.y));
+      var y, x;
+      if (fromBelow) {
+        for (y = y1; y >= y0; y--) for (x = x0; x <= x1; x++) {
+          if (b.cells[y * BW + x]) return { b: b, x: x, y: y };
+        }
+      } else {
+        for (y = y0; y <= y1; y++) for (x = x0; x <= x1; x++) {
+          if (b.cells[y * BW + x]) return { b: b, x: x, y: y };
+        }
+      }
+    }
+    return null;
+  }
+
+  function bunkersEatenBy(rx, ry, rw, rh) {
+    for (var i = 0; i < bunkers.length; i++) {
+      var b = bunkers[i];
+      if (rx + rw <= b.x || rx >= b.x + BW || ry + rh <= b.y || ry >= b.y + BH) continue;
+      var x0 = Math.max(0, Math.floor(rx - b.x));
+      var x1 = Math.min(BW - 1, Math.floor(rx + rw - 1 - b.x));
+      var y0 = Math.max(0, Math.floor(ry - b.y));
+      var y1 = Math.min(BH - 1, Math.floor(ry + rh - 1 - b.y));
+      for (var y = y0; y <= y1; y++) {
+        for (var x = x0; x <= x1; x++) {
+          if (b.cells[y * BW + x]) { b.cells[y * BW + x] = 0; b.dirty = true; }
+        }
+      }
+    }
+  }
+
+  /* ---- formation ---- */
+  function invType(row) { return row === 0 ? 0 : (row <= 2 ? 1 : 2); }
+
+  function buildInvaders(startY) {
+    inv = [];
+    for (var r = 0; r < ROWS; r++) {
+      for (var c = 0; c < COLS; c++) {
+        inv.push({ alive: true, row: r, col: c, type: invType(r) });
+      }
+    }
+    aliveN = ROWS * COLS;
+    fx = FORM_X0;
+    fy = startY;
+    formDir = 1;
+    formTimer = 0.8;
+    frameFlip = 0;
+    marchIdx = 0;
+  }
+
+  function invX(v) { return fx + v.col * CELL + INV_OFF[v.type]; }
+  function invY(v) { return fy + v.row * CELL; }
+
+  function extents() {
+    var l = 1e9, r = -1e9;
+    for (var i = 0; i < inv.length; i++) {
+      var v = inv[i];
+      if (!v.alive) continue;
+      var x = invX(v);
+      if (x < l) l = x;
+      if (x + INV_W[v.type] > r) r = x + INV_W[v.type];
+    }
+    return { l: l, r: r };
+  }
+
+  function stepInterval() {
+    var t = (aliveN - 1) / (ROWS * COLS - 1);
+    if (t < 0) t = 0;
+    var ms = 60 + (800 - 60) * Math.pow(t, 1.28);
+    ms *= Math.max(0.55, Math.pow(0.93, wave - 1));
+    return ms / 1000;
+  }
+
+  function stepFormation() {
+    if (aliveN <= 0) return;
+    var ext = extents();
+    var edge = formDir > 0 ? (ext.r + 2 > W - EDGE) : (ext.l - 2 < EDGE);
+    if (edge) { fy += 8; formDir = -formDir; }
+    else { fx += 2 * formDir; }
+    frameFlip ^= 1;
+    Sfx.march(marchIdx++);
+
+    for (var i = 0; i < inv.length; i++) {
+      var v = inv[i];
+      if (!v.alive) continue;
+      var y = invY(v);
+      if (y + INV_H >= BUNKER_Y && y <= BUNKER_Y + BH) {
+        bunkersEatenBy(invX(v), y, INV_W[v.type], INV_H);
+      }
+      if (y + INV_H >= PLAYER_Y) { invasionLanded = true; }
+    }
+  }
+  var invasionLanded = false;
+
+  /* ---- waves ---- */
+  function waveStartY() {
+    return FORM_Y0 + Math.min(6, wave - 1) * 8;
+  }
+  function setupWave() {
+    buildInvaders(waveStartY());
+    buildBunkers();
+    bullet = null;
+    bombs = [];
+    booms = [];
+    floats = [];
+    invasionLanded = false;
+    player.x = MARGIN + 6;
+    player.alive = true;
+    player.inv = 1.0;
+    player.deathT = 0;
+    saucer = null;
+    Sfx.saucerStop();
+    saucerTimer = 20 + Math.random() * 10;
+    bombTimer = 2.2;
+  }
+
+  function startGame() {
+    score = 0; lives = 3; wave = 1;
+    bonusGiven = false; shotCounter = 0;
+    startHi = hiScore; newHigh = false;
+    setupWave();
+    state = 'PLAYING'; stateTime = 0;
+  }
+
+  function gameOver() {
+    state = 'GAME_OVER'; stateTime = 0;
+    newHigh = score > startHi;
+    if (score > hiScore) hiScore = score;
+    saveHi();
+    bullet = null; bombs = [];
+    saucer = null; Sfx.saucerStop();
+  }
+
+  function addScore(n) {
+    score += n;
+    if (score > hiScore) hiScore = score;
+    if (!bonusGiven && score >= 1000) {
+      bonusGiven = true;
+      lives++;
+      Sfx.extraLife();
+      floats.push({
+        x: Math.round((W - textW('EXTRA SHIP')) / 2), y: 150,
+        text: 'EXTRA SHIP', t: 1.6, color: C_AMBER
+      });
+    }
+  }
+
+  function togglePause() {
+    if (state !== 'PLAYING' && state !== 'PLAYER_DEATH' && state !== 'WAVE_CLEAR') return;
+    paused = !paused;
+    if (paused) Sfx.saucerStop();
+  }
+
+  /* =====================================================================
+     8.  Simulation.
+     ===================================================================== */
+  function rectHit(ax, ay, aw, ah, bx, by, bw, bh) {
+    return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+  }
+  function spark(x, y) { booms.push({ x: x - 2, y: y - 2, t: 0.12, kind: 'spark' }); }
+
+  function fireBullet() {
+    if (bullet) return;
+    bullet = { x: Math.round(player.x + 6), y: PLAYER_Y - 4 };
+    shotCounter++;
+    Sfx.shoot();
+  }
+
+  function bulletCollide() {
+    if (!bullet) return true;
+    var bx = bullet.x, by = bullet.y;
+    if (by <= SHOT_TOP) { spark(bx, SHOT_TOP + 2); bullet = null; return true; }
+
+    // enemy bombs first: rewards timing
+    for (var i = bombs.length - 1; i >= 0; i--) {
+      var bo = bombs[i];
+      if (rectHit(bx, by, 1, 4, bo.x, bo.y, 3, 7)) {
+        bombs.splice(i, 1);
+        spark(bx, by);
+        Sfx.bunkerHit();
+        bullet = null;
+        return true;
+      }
+    }
+    // saucer
+    if (saucer && rectHit(bx, by, 1, 4, saucer.x, SAUCER_Y, 16, 7)) {
+      var val = SAUCER_TABLE[shotCounter % SAUCER_TABLE.length];
+      addScore(val);
+      floats.push({ x: saucer.x + 2, y: SAUCER_Y, text: String(val), t: 1.3, color: C_RED });
+      booms.push({ x: saucer.x + 1, y: SAUCER_Y, t: 0.3, kind: 'inv' });
+      saucer = null;
+      Sfx.saucerStop();
+      Sfx.saucerScore();
+      bullet = null;
+      return true;
+    }
+    // invaders
+    for (var j = 0; j < inv.length; j++) {
+      var v = inv[j];
+      if (!v.alive) continue;
+      var ix = invX(v), iy = invY(v);
+      if (rectHit(bx, by, 1, 4, ix, iy, INV_W[v.type], INV_H)) {
+        v.alive = false;
+        aliveN--;
+        addScore(POINTS[v.type]);
+        booms.push({ x: ix + (INV_W[v.type] - 13) / 2, y: iy, t: 0.26, kind: 'inv' });
+        Sfx.invaderDie();
+        bullet = null;
+        return true;
+      }
+    }
+    // bunkers
+    var hit = bunkerProbe(bx, by, 1, 4, true);
+    if (hit) {
+      erode(hit.b, hit.x, hit.y, true);
+      Sfx.bunkerHit();
+      bullet = null;
+      return true;
+    }
+    return false;
+  }
+
+  function spawnBomb() {
+    var cols = [];
+    for (var c = 0; c < COLS; c++) {
+      for (var r = ROWS - 1; r >= 0; r--) {
+        var v = inv[r * COLS + c];
+        if (v.alive) { cols.push(v); break; }
+      }
+    }
+    if (!cols.length) return;
+    var fastP = Math.min(0.5, 0.2 + 0.06 * (wave - 1));
+    var fast = Math.random() < fastP;
+    var pick;
+    if (fast) {
+      var px = player.x + 6.5, bd = 1e9, bi = 0;
+      for (var i = 0; i < cols.length; i++) {
+        var d = Math.abs(invX(cols[i]) + INV_W[cols[i].type] / 2 - px);
+        if (d < bd) { bd = d; bi = i; }
+      }
+      pick = cols[bi];
+    } else {
+      pick = cols[(Math.random() * cols.length) | 0];
+    }
+    bombs.push({
+      x: Math.round(invX(pick) + INV_W[pick.type] / 2 - 1),
+      y: invY(pick) + INV_H,
+      fast: fast, anim: 0, animT: 0
+    });
+  }
+
+  function bombInterval() {
+    var wf = Math.max(0.5, Math.pow(0.88, wave - 1));
+    var base = 1.6 * wf * (0.45 + 0.55 * (aliveN / (ROWS * COLS)));
+    return Math.max(0.4, base * (0.7 + Math.random() * 0.8));
+  }
+
+  function killPlayer() {
+    state = 'PLAYER_DEATH';
+    stateTime = 0;
+    player.alive = false;
+    player.deathT = 0;
+    lives--;
+    Sfx.playerDie();
+    Sfx.saucerStop();
+  }
+
+  function updatePlay(dt) {
+    // --- player motion (read the held set, never the event handler) ---
+    var mv = 0;
+    if (keys.L || tapped.L) mv -= 1;
+    if (keys.R || tapped.R) mv += 1;
+    if (mv !== 0) {
+      player.x += mv * PLAYER_SPEED * dt;
+      if (player.x < MARGIN) player.x = MARGIN;
+      if (player.x > W - MARGIN - 13) player.x = W - MARGIN - 13;
+    }
+    if (player.inv > 0) player.inv -= dt;
+
+    if (pendingFire > 0) { pendingFire--; fireBullet(); }
+
+    // --- player shot, sub-stepped so nothing is tunnelled through ---
+    if (bullet) {
+      var remain = BULLET_SPEED * dt, gone = false;
+      while (remain > 0 && !gone && bullet) {
+        var st = Math.min(2, remain);
+        remain -= st;
+        bullet.y -= st;
+        gone = bulletCollide();
+      }
+    }
+
+    // --- formation ---
+    formTimer -= dt;
+    if (formTimer <= 0 && aliveN > 0) {
+      stepFormation();
+      formTimer += stepInterval();
+      if (formTimer <= 0) formTimer = stepInterval();
+    }
+    if (invasionLanded) { gameOver(); return; }
+
+    // --- bombs ---
+    bombTimer -= dt;
+    if (bombTimer <= 0) {
+      if (bombs.length < 3 && aliveN > 0) spawnBomb();
+      bombTimer = bombInterval();
+    }
+    for (var i = bombs.length - 1; i >= 0; i--) {
+      var bo = bombs[i];
+      bo.animT += dt;
+      if (bo.animT > 0.08) { bo.animT = 0; bo.anim ^= 1; }
+      var sp = bo.fast ? BOMB_FAST_SPEED : BOMB_SPEED;
+      var rem = sp * dt, dead = false;
+      while (rem > 0 && !dead) {
+        var s2 = Math.min(2, rem);
+        rem -= s2;
+        bo.y += s2;
+        if (bo.y + 7 >= GROUND_Y) {
+          spark(bo.x + 1, GROUND_Y - 3);
+          dead = true;
+          break;
+        }
+        if (player.inv <= 0 && player.alive &&
+            rectHit(bo.x, bo.y, 3, 7, player.x, PLAYER_Y, 13, 8)) {
+          bombs.splice(i, 1);
+          killPlayer();
+          return;
+        }
+        var hb = bunkerProbe(bo.x, bo.y, 3, 7, false);
+        if (hb) { erode(hb.b, hb.x, hb.y, false); Sfx.bunkerHit(); dead = true; break; }
+      }
+      if (dead) bombs.splice(i, 1);
+    }
+
+    // --- mystery ship ---
+    saucerTimer -= dt;
+    if (!saucer && aliveN > 8 && saucerTimer <= 0) {
+      saucerSide ^= 1;
+      var dir = saucerSide ? 1 : -1;
+      saucer = { x: dir > 0 ? -16 : W, dir: dir };
+      Sfx.saucerStart();
+      saucerTimer = 20 + Math.random() * 10;
+    }
+    if (saucer) {
+      saucer.x += saucer.dir * SAUCER_SPEED * dt;
+      if (saucer.x > W + 1 || saucer.x < -17) { saucer = null; Sfx.saucerStop(); }
+    }
+
+    // --- wave cleared ---
+    if (aliveN === 0) {
+      state = 'WAVE_CLEAR';
+      stateTime = 0;
+      bullet = null;
+      bombs = [];
+      saucer = null;
+      Sfx.saucerStop();
+    }
+  }
+
+  function updateDeath(dt) {
+    player.deathT += dt;
+    if (player.deathT >= 1.2) {
+      if (lives <= 0) { gameOver(); return; }
+      bombs = [];
+      bullet = null;
+      saucer = null;
+      Sfx.saucerStop();
+      saucerTimer = Math.max(saucerTimer, 6);
+      bombTimer = Math.max(bombTimer, 1.2);
+      player.x = MARGIN + 6;
+      player.alive = true;
+      player.inv = 1.0;
+      state = 'PLAYING';
+      stateTime = 0;
+    }
+  }
+
+  function updateWaveClear(dt) {
+    if (stateTime >= 2.0) {
+      wave++;
+      setupWave();
+      state = 'PLAYING';
+      stateTime = 0;
+    }
+  }
+
+  /* ---- idle title formation ---- */
+  var tInv = [], tx = 0, tdir = 1, ttimer = 0, tframe = 0;
+  function buildTitleInvaders() {
+    tInv = [];
+    for (var r = 0; r < 2; r++) {
+      for (var c = 0; c < 9; c++) tInv.push({ r: r, c: c, type: r === 0 ? 1 : 2 });
+    }
+    tx = 42; tdir = 1; ttimer = 0; tframe = 0;
+  }
+  function updateTitle(dt) {
+    ttimer -= dt;
+    if (ttimer <= 0) {
+      ttimer += 0.45;
+      if ((tdir > 0 && tx + 2 > 62) || (tdir < 0 && tx - 2 < 22)) tdir = -tdir;
+      else tx += 2 * tdir;
+      tframe ^= 1;
+    }
+    if (stateTime > 0.10 && pendingAction > 0) { pendingAction = 0; startGame(); }
+  }
+
+  function update(dt) {
+    timeNow += dt;
+    stateTime += dt;
+    if (state === 'TITLE') updateTitle(dt);
+    else if (state === 'PLAYING') updatePlay(dt);
+    else if (state === 'PLAYER_DEATH') updateDeath(dt);
+    else if (state === 'WAVE_CLEAR') updateWaveClear(dt);
+    else if (state === 'GAME_OVER') {
+      if (stateTime > 0.5 && pendingAction > 0) {
+        pendingAction = 0;
+        state = 'TITLE'; stateTime = 0;
+        buildTitleInvaders();
+      }
+    }
+    // effects tick in every state except the death freeze
+    if (state !== 'PLAYER_DEATH') {
+      for (var i = booms.length - 1; i >= 0; i--) {
+        booms[i].t -= dt;
+        if (booms[i].t <= 0) booms.splice(i, 1);
+      }
+    }
+    for (var j = floats.length - 1; j >= 0; j--) {
+      floats[j].t -= dt;
+      if (floats[j].t <= 0) floats.splice(j, 1);
+    }
+    tapped = {};
+    pendingFire = 0;
+    if (timeNow - pendingActionT > 0.4) pendingAction = 0;
+  }
+
+  /* =====================================================================
+     9.  Rendering.
+     ===================================================================== */
+  function drawBunkers() {
+    for (var i = 0; i < bunkers.length; i++) {
+      var b = bunkers[i];
+      if (b.dirty) {
+        b.cx.clearRect(0, 0, BW, BH);
+        b.cx.fillStyle = C_GREEN;
+        for (var y = 0; y < BH; y++) {
+          for (var x = 0; x < BW; x++) {
+            if (b.cells[y * BW + x]) b.cx.fillRect(x, y, 1, 1);
+          }
+        }
+        b.dirty = false;
+      }
+      ctx.drawImage(b.canvas, b.x, b.y);
+    }
+  }
+
+  function drawInvaders() {
+    for (var i = 0; i < inv.length; i++) {
+      var v = inv[i];
+      if (!v.alive) continue;
+      var s = SPR.inv[v.type][frameFlip];
+      ctx.drawImage(s.img, invX(v) | 0, invY(v) | 0);
+    }
+  }
+
+  function drawHUD() {
+    drawText('SCORE', 8, 3, C_WHITE);
+    drawText('HI-SCORE', 84, 3, C_WHITE);
+    drawText('WAVE', 184, 3, C_WHITE);
+    drawText(pad(score, 4), 8, 11, C_WHITE);
+    drawText(pad(hiScore, 4), 94, 11, C_WHITE);
+    drawText(pad(wave, 2), 190, 11, C_WHITE);
+
+    ctx.fillStyle = C_GREEN;
+    ctx.fillRect(0, GROUND_Y, W, 1);
+
+    drawText(String(Math.max(0, lives)), 8, 244, C_GREEN);
+    for (var i = 0; i < Math.min(5, Math.max(0, lives - 1)); i++) {
+      ctx.drawImage(SPR.shipIcon.img, 18 + i * 16, 244);
+    }
+    drawText('WAVE ' + pad(wave, 2), W - 8 - textW('WAVE 00'), 244, C_GREEN_D);
+    if (Sfx.isMuted()) drawTextC('MUTE', 244, C_GREEN_D);
+  }
+
+  function drawEffects() {
+    for (var i = 0; i < booms.length; i++) {
+      var b = booms[i];
+      if (b.kind === 'spark') ctx.drawImage(SPR.spark.img, b.x | 0, b.y | 0);
+      else ctx.drawImage(SPR.invBoom.img, b.x | 0, b.y | 0);
+    }
+    for (var j = 0; j < floats.length; j++) {
+      var f = floats[j];
+      drawText(f.text, f.x, f.y, f.color || C_WHITE);
+    }
+  }
+
+  function drawField() {
+    drawInvaders();
+    drawBunkers();
+
+    if (saucer) ctx.drawImage(SPR.saucer.img, Math.round(saucer.x), SAUCER_Y);
+
+    if (bullet) {
+      ctx.fillStyle = C_WHITE;
+      ctx.fillRect(bullet.x | 0, Math.round(bullet.y), 1, 4);
+    }
+    for (var i = 0; i < bombs.length; i++) {
+      var bo = bombs[i];
+      var s = (bo.fast ? SPR.fast : SPR.bomb)[bo.anim];
+      ctx.drawImage(s.img, bo.x | 0, Math.round(bo.y));
+    }
+
+    if (state === 'PLAYER_DEATH') {
+      var f = (Math.floor(player.deathT / 0.1) & 1);
+      ctx.drawImage(SPR.shipBoom[f].img, Math.round(player.x), PLAYER_Y);
+    } else if (player.alive && state !== 'GAME_OVER') {
+      var blink = player.inv > 0 && (Math.floor(player.inv * 12) & 1);
+      if (!blink) ctx.drawImage(SPR.ship.img, Math.round(player.x), PLAYER_Y);
+    }
+    drawEffects();
+  }
+
+  function dim(y0, y1) {
+    ctx.fillStyle = 'rgba(0,0,0,0.78)';
+    ctx.fillRect(0, y0, W, y1 - y0);
+  }
+
+  function drawTitle() {
+    drawHUD();
+
+    drawTextC('SPACE INVADERS', 26, C_GREEN, 2);
+
+    drawTextC('*SCORE ADVANCE TABLE*', 52, C_WHITE);
+
+    var tx0 = 66;
+    ctx.drawImage(SPR.saucer.img, tx0, 68);
+    drawText('= ? MYSTERY', tx0 + 22, 68, C_RED);
+    ctx.drawImage(SPR.inv[0][0].img, tx0 + 4, 82);
+    drawText('= 30 POINTS', tx0 + 22, 82, C_WHITE);
+    ctx.drawImage(SPR.inv[1][0].img, tx0 + 2, 96);
+    drawText('= 20 POINTS', tx0 + 22, 96, C_WHITE);
+    ctx.drawImage(SPR.inv[2][0].img, tx0 + 2, 110);
+    drawText('= 10 POINTS', tx0 + 22, 110, C_WHITE);
+
+    drawTextC('LEFT AND RIGHT ARROWS TO MOVE', 132, C_GREEN);
+    drawTextC('UP ARROW TO FIRE', 144, C_GREEN);
+    drawTextC('SPACE FIRES TOO  P PAUSE  M MUTE', 156, C_GREEN_D);
+
+    if (!(Math.floor(timeNow * 1.6) & 1)) {
+      drawTextC('PRESS AN ARROW KEY TO START', 176, C_WHITE);
+    }
+
+    for (var i = 0; i < tInv.length; i++) {
+      var v = tInv[i];
+      var s = SPR.inv[v.type][tframe];
+      ctx.drawImage(s.img, (tx + v.c * 16 + INV_OFF[v.type]) | 0, 198 + v.r * 16);
+    }
+  }
+
+  function render() {
+    ctx.fillStyle = C_BLACK;
+    ctx.fillRect(0, 0, W, H);
+
+    if (state === 'TITLE') {
+      drawTitle();
+    } else {
+      drawField();
+      drawHUD();
+
+      if (state === 'WAVE_CLEAR') {
+        dim(100, 126);
+        drawTextC('WAVE ' + wave + ' CLEARED', 108, C_GREEN);
+      } else if (state === 'GAME_OVER') {
+        dim(84, 172);
+        drawTextC('GAME OVER', 92, C_RED, 2);
+        drawTextC('FINAL SCORE ' + pad(score, 4), 120, C_WHITE);
+        if (newHigh && !(Math.floor(timeNow * 3) & 1)) {
+          drawTextC('NEW HIGH SCORE!', 134, C_AMBER);
+        }
+        if (stateTime > 0.5 && !(Math.floor(timeNow * 1.6) & 1)) {
+          drawTextC('PRESS AN ARROW KEY', 154, C_WHITE);
+        }
+      }
+    }
+
+    if (paused || autoPaused) {
+      dim(104, 148);
+      drawTextC('PAUSED', 110, C_WHITE, 2);
+      drawTextC(paused ? 'PRESS P TO RESUME' : 'CLICK OR FOCUS TO RESUME', 134, C_GREEN);
+    }
+  }
+
+  /* =====================================================================
+     10.  Main loop: rAF for presentation, fixed 1/60 accumulator for truth.
+     ===================================================================== */
+  var lastT = 0, acc = 0;
+
+  function frame(t) {
+    requestAnimationFrame(frame);
+    if (!lastT) lastT = t;
+    var el = t - lastT;
+    lastT = t;
+    if (!(el >= 0)) el = 0;
+    if (el > 250) el = 250;                 // a backgrounded tab must not burst
+
+    if (paused || autoPaused || document.hidden) {
+      acc = 0;
+      render();
+      return;
+    }
+    acc += el / 1000;
+    var n = 0;
+    while (acc >= DT && n < 8) { update(DT); acc -= DT; n++; }
+    if (n >= 8) acc = 0;
+    render();
+  }
+
+  /* =====================================================================
+     11.  Boot.
+     ===================================================================== */
+  function main() {
+    buildSprites();
+    resize();
+    buildBunkers();
+    buildInvaders(waveStartY());
+    buildTitleInvaders();
+    state = 'TITLE';
+
+    window.addEventListener('resize', resize, false);
+    window.addEventListener('orientationchange', resize, false);
+    window.addEventListener('keydown', onKeyDown, false);
+    window.addEventListener('keyup', onKeyUp, false);
+    window.addEventListener('blur', function () {
+      keys = {}; tapped = {};
+      autoPaused = true;
+      Sfx.saucerStop();
+    }, false);
+    window.addEventListener('focus', function () {
+      autoPaused = false; lastT = 0; acc = 0;
+    }, false);
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { autoPaused = true; keys = {}; Sfx.saucerStop(); }
+      else { autoPaused = false; lastT = 0; acc = 0; }
+    }, false);
+    // a click gives the page focus back after the window was blurred
+    window.addEventListener('mousedown', function () {
+      autoPaused = false; lastT = 0; acc = 0; Sfx.unlock();
+    }, false);
+
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  try { main(); } catch (err) { panic(err); }
+})();
+</script>
+</body>
+</html>

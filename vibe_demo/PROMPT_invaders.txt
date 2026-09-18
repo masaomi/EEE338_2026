@@ -1,0 +1,7 @@
+Write a playable Space Invaders as a single self-contained HTML file.
+
+No external references of any kind: no CDN, no web fonts, no images, no network.
+It must work when the file is opened directly from disk in a browser.
+Arrow keys to play.
+
+Output only the contents of the HTML file. No explanation, no markdown fences.

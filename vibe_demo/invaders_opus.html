@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>SPACE INVADERS</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #000;
+    color: #bdbdbd;
+    font-family: ui-monospace, Menlo, Consolas, monospace;
+    overflow: hidden;
+  }
+  #wrap {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  #screen {
+    display: block;
+    background: #000;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    border: 1px solid #1d3a22;
+    box-shadow: 0 0 24px rgba(43, 255, 95, 0.18), 0 0 80px rgba(0, 0, 0, 0.9) inset;
+  }
+  #help {
+    margin: 0;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #4a6b52;
+    text-align: center;
+    user-select: none;
+  }
+  #help b { color: #2bff5f; font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="screen" width="224" height="256"></canvas>
+  <p id="help"><b>&#8592; &#8594;</b> move &nbsp;&middot;&nbsp; <b>&#8593;</b> or <b>space</b> fire &nbsp;&middot;&nbsp; <b>P</b> pause &nbsp;&middot;&nbsp; <b>M</b> sound</p>
+</div>
+<script>
+(function () {
+'use strict';
+
+/* ------------------------------------------------------------------ *
+ *  screen
+ * ------------------------------------------------------------------ */
+var W = 224, H = 256;
+var cv = document.getElementById('screen');
+var ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+
+function fitScreen() {
+  var s = Math.min((window.innerWidth - 16) / W, (window.innerHeight - 70) / H);
+  s = Math.max(1, Math.floor(s));
+  cv.style.width = (W * s) + 'px';
+  cv.style.height = (H * s) + 'px';
+}
+window.addEventListener('resize', fitScreen);
+fitScreen();
+
+/* ------------------------------------------------------------------ *
+ *  5x7 bitmap font
+ * ------------------------------------------------------------------ */
+var FONT = {};
+[
+  "A|.###.|#...#|#...#|#####|#...#|#...#|#...#",
+  "B|####.|#...#|#...#|####.|#...#|#...#|####.",
+  "C|.###.|#...#|#....|#....|#....|#...#|.###.",
+  "D|####.|#...#|#...#|#...#|#...#|#...#|####.",
+  "E|#####|#....|#....|####.|#....|#....|#####",
+  "F|#####|#....|#....|####.|#....|#....|#....",
+  "G|.###.|#...#|#....|#.###|#...#|#...#|.###.",
+  "H|#...#|#...#|#...#|#####|#...#|#...#|#...#",
+  "I|#####|..#..|..#..|..#..|..#..|..#..|#####",
+  "J|..###|...#.|...#.|...#.|...#.|#..#.|.##..",
+  "K|#...#|#..#.|#.#..|##...|#.#..|#..#.|#...#",
+  "L|#....|#....|#....|#....|#....|#....|#####",
+  "M|#...#|##.##|#.#.#|#.#.#|#...#|#...#|#...#",
+  "N|#...#|##..#|#.#.#|#.#.#|#..##|#...#|#...#",
+  "O|.###.|#...#|#...#|#...#|#...#|#...#|.###.",
+  "P|####.|#...#|#...#|####.|#....|#....|#....",
+  "Q|.###.|#...#|#...#|#...#|#.#.#|#..#.|.##.#",
+  "R|####.|#...#|#...#|####.|#.#..|#..#.|#...#",
+  "S|.####|#....|#....|.###.|....#|....#|####.",
+  "T|#####|..#..|..#..|..#..|..#..|..#..|..#..",
+  "U|#...#|#...#|#...#|#...#|#...#|#...#|.###.",
+  "V|#...#|#...#|#...#|#...#|#...#|.#.#.|..#..",
+  "W|#...#|#...#|#...#|#.#.#|#.#.#|##.##|#...#",
+  "X|#...#|#...#|.#.#.|..#..|.#.#.|#...#|#...#",
+  "Y|#...#|#...#|.#.#.|..#..|..#..|..#..|..#..",
+  "Z|#####|....#|...#.|..#..|.#...|#....|#####",
+  "0|.###.|#...#|#..##|#.#.#|##..#|#...#|.###.",
+  "1|..#..|.##..|..#..|..#..|..#..|..#..|.###.",
+  "2|.###.|#...#|....#|...#.|..#..|.#...|#####",
+  "3|#####|...#.|..#..|...#.|....#|#...#|.###.",
+  "4|...#.|..##.|.#.#.|#..#.|#####|...#.|...#.",
+  "5|#####|#....|####.|....#|....#|#...#|.###.",
+  "6|..##.|.#...|#....|####.|#...#|#...#|.###.",
+  "7|#####|....#|...#.|..#..|.#...|.#...|.#...",
+  "8|.###.|#...#|#...#|.###.|#...#|#...#|.###.",
+  "9|.###.|#...#|#...#|.####|....#|...#.|.##..",
+  " |.....|.....|.....|.....|.....|.....|.....",
+  "-|.....|.....|.....|#####|.....|.....|.....",
+  "=|.....|.....|#####|.....|#####|.....|.....",
+  "+|.....|..#..|..#..|#####|..#..|..#..|.....",
+  ":|.....|..#..|..#..|.....|..#..|..#..|.....",
+  ".|.....|.....|.....|.....|.....|.##..|.##..",
+  ",|.....|.....|.....|.....|.##..|.##..|.#...",
+  "!|..#..|..#..|..#..|..#..|..#..|.....|..#..",
+  "?|.###.|#...#|....#|...#.|..#..|.....|..#..",
+  "*|.....|#.#.#|.###.|#####|.###.|#.#.#|.....",
+  "/|....#|....#|...#.|..#..|.#...|#....|#...."
+].forEach(function (row) {
+  FONT[row.charAt(0)] = row.slice(2).split('|');
+});
+
+function textWidth(s, sc) { sc = sc || 1; return s.length * 6 * sc - sc; }
+
+function drawText(s, x, y, color, sc) {
+  sc = sc || 1;
+  ctx.fillStyle = color;
+  s = String(s).toUpperCase();
+  var cx = x;
+  for (var i = 0; i < s.length; i++) {
+    var g = FONT[s.charAt(i)];
+    if (g) {
+      for (var r = 0; r < 7; r++) {
+        var row = g[r];
+        for (var c = 0; c < 5; c++) {
+          if (row.charAt(c) !== '.') ctx.fillRect(cx + c * sc, y + r * sc, sc, sc);
+        }
+      }
+    }
+    cx += 6 * sc;
+  }
+}
+
+function drawTextC(s, y, color, sc) {
+  drawText(s, Math.round((W - textWidth(String(s), sc)) / 2), y, color, sc);
+}
+
+/* ------------------------------------------------------------------ *
+ *  sprites
+ * ------------------------------------------------------------------ */
+function sprite(rows, color) {
+  var w = rows[0].length, h = rows.length;
+  var c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  var g = c.getContext('2d');
+  g.fillStyle = color;
+  for (var y = 0; y < h; y++)
+    for (var x = 0; x < w; x++)
+      if (rows[y].charAt(x) !== '.') g.fillRect(x, y, 1, 1);
+  return c;
+}
+
+var COL = {
+  squid: '#ff6b9d',
+  crab:  '#ffe35c',
+  octo:  '#4ee3ff',
+  ufo:   '#ff3b3b',
+  ship:  '#2bff5f',
+  wall:  '#2bff5f',
+  shot:  '#ffffff',
+  bomb:  '#dfe7ff',
+  hud:   '#ffffff',
+  dim:   '#4a6b52'
+};
+
+var SQUID = [[
+  "...##...",
+  "..####..",
+  ".######.",
+  "##.##.##",
+  "########",
+  "..#..#..",
+  ".#.##.#.",
+  "#.#..#.#"
+], [
+  "...##...",
+  "..####..",
+  ".######.",
+  "##.##.##",
+  "########",
+  ".#.##.#.",
+  "#......#",
+  ".#....#."
+]];
+
+var CRAB = [[
+  "..#.....#..",
+  "...#...#...",
+  "..#######..",
+  ".##.###.##.",
+  "###########",
+  "#.#######.#",
+  "#.#.....#.#",
+  "...##.##..."
+], [
+  "..#.....#..",
+  "#..#...#..#",
+  "#.#######.#",
+  "###.###.###",
+  "###########",
+  ".#########.",
+  "..#.....#..",
+  ".#.......#."
+]];
+
+var OCTO = [[
+  "....####....",
+  ".##########.",
+  "############",
+  "###..##..###",
+  "############",
+  "...##..##...",
+  "..##.##.##..",
+  "##........##"
+], [
+  "....####....",
+  ".##########.",
+  "############",
+  "###..##..###",
+  "############",
+  "..###..###..",
+  ".##..##..##.",
+  "..##....##.."
+]];
+
+var SHIP = [
+  "......#......",
+  ".....###.....",
+  ".....###.....",
+  ".###########.",
+  "#############",
+  "#############",
+  "#############",
+  "#############"
+];
+
+var UFO = [
+  ".....######.....",
+  "...##########...",
+  "..############..",
+  ".##.##.##.##.##.",
+  "################",
+  "..###..##..###..",
+  "...#........#..."
+];
+
+var BOOM = [
+  "#..#.....#..#",
+  ".#..#...#..#.",
+  "..#..#.#..#..",
+  "###.......###",
+  "..#..#.#..#..",
+  ".#..#...#..#.",
+  "#..#.....#..#",
+  "............."
+];
+
+var SHIP_BOOM = [[
+  "..#.#...#.#..",
+  "#..#..#..#..#",
+  ".#..#.#.#..#.",
+  "#.####.####.#",
+  "##.#######.##",
+  "#.#######.#.#",
+  ".#.#####.#.#.",
+  "#.#.###.#.#.#"
+], [
+  "#...#.#...#.#",
+  ".#..#..#..#..",
+  "#.#..#.#..#.#",
+  ".#.###.###.#.",
+  "#.########.##",
+  ".#######.###.",
+  "#.#.###.#.#.#",
+  ".#.#.#.#.#.#."
+]];
+
+var BOMBS = [
+  [[".#.", "..#", ".#.", "#..", ".#.", "..#", ".#."],
+   ["..#", ".#.", "#..", ".#.", "..#", ".#.", "#.."]],
+  [[".#.", ".#.", "###", ".#.", ".#.", "###", ".#."],
+   ["#.#", "###", ".#.", "###", "#.#", ".#.", "#.#"]],
+  [["#.#", ".#.", "#.#", ".#.", "#.#", ".#.", "#.#"],
+   [".#.", "#.#", ".#.", "#.#", ".#.", "#.#", ".#."]]
+];
+
+var ALIEN_COLORS = [COL.squid, COL.crab, COL.octo];
+var ALIEN_POINTS = [30, 20, 10];
+
+var SPR = {
+  alien: [
+    [sprite(SQUID[0], COL.squid), sprite(SQUID[1], COL.squid)],
+    [sprite(CRAB[0], COL.crab),   sprite(CRAB[1], COL.crab)],
+    [sprite(OCTO[0], COL.octo),   sprite(OCTO[1], COL.octo)]
+  ],
+  boom: [sprite(BOOM, COL.squid), sprite(BOOM, COL.crab), sprite(BOOM, COL.octo)],
+  ship: sprite(SHIP, COL.ship),
+  shipBoom: [sprite(SHIP_BOOM[0], COL.ship), sprite(SHIP_BOOM[1], COL.ship)],
+  ufo: sprite(UFO, COL.ufo),
+  ufoBoom: sprite(BOOM, COL.ufo),
+  bomb: BOMBS.map(function (t) {
+    return [sprite(t[0], COL.bomb), sprite(t[1], COL.bomb)];
+  })
+};
+
+/* ------------------------------------------------------------------ *
+ *  sound (WebAudio, generated - no files)
+ * ------------------------------------------------------------------ */
+var AC = null, muted = false, noiseBuf = null;
+
+function ac() {
+  if (!AC) {
+    try { AC = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { AC = null; }
+  }
+  if (AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+
+function beep(f1, f2, dur, type, vol) {
+  var a = ac();
+  if (!a || muted) return;
+  var t = a.currentTime;
+  var o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'square';
+  o.frequency.setValueAtTime(f1, t);
+  if (f2 !== f1) o.frequency.linearRampToValueAtTime(f2, t + dur);
+  g.gain.setValueAtTime(vol || 0.05, t);
+  g.gain.exponentialRampToValueAtTime(0.0005, t + dur);
+  o.connect(g).connect(a.destination);
+  o.start(t);
+  o.stop(t + dur + 0.02);
+}
+
+function noise(dur, vol, hz) {
+  var a = ac();
+  if (!a || muted) return;
+  if (!noiseBuf) {
+    noiseBuf = a.createBuffer(1, Math.floor(a.sampleRate * 0.6), a.sampleRate);
+    var d = noiseBuf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  var t = a.currentTime;
+  var s = a.createBufferSource(); s.buffer = noiseBuf;
+  var f = a.createBiquadFilter();
+  f.type = 'lowpass';
+  f.frequency.setValueAtTime(hz || 1600, t);
+  f.frequency.exponentialRampToValueAtTime(180, t + dur);
+  var g = a.createGain();
+  g.gain.setValueAtTime(vol || 0.08, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+  s.connect(f).connect(g).connect(a.destination);
+  s.start(t);
+  s.stop(t + dur);
+}
+
+var STEP_TONES = [110, 98, 87, 78];
+var sndShoot   = function () { beep(880, 300, 0.12, 'square', 0.04); };
+var sndStep    = function (i) { beep(STEP_TONES[i], STEP_TONES[i] * 0.85, 0.08, 'square', 0.05); };
+var sndAlien   = function () { noise(0.22, 0.09, 2400); };
+var sndShip    = function () { noise(0.7, 0.13, 1200); beep(200, 40, 0.6, 'sawtooth', 0.05); };
+var sndUfo     = function (i) { beep(i ? 620 : 470, i ? 470 : 620, 0.09, 'square', 0.03); };
+var sndUfoHit  = function () { beep(900, 120, 0.35, 'square', 0.06); noise(0.3, 0.08, 2000); };
+var sndShield  = function () { noise(0.1, 0.05, 900); };
+var sndExtra   = function () { beep(660, 1320, 0.25, 'triangle', 0.06); };
+
+/* ------------------------------------------------------------------ *
+ *  layout constants
+ * ------------------------------------------------------------------ */
+var COLS = 11, ROWS = 5;
+var CW = 16, CH = 16;
+var FLEET_X0 = 24, FLEET_Y0 = 56;
+var STEP_X = 2, STEP_Y = 8;
+var EDGE = 6;
+var PLAYER_Y = 214;
+var GROUND_Y = 238;
+var SHIELD_Y = 184;
+var SW = 22, SH = 16;
+var UFO_Y = 32;
+var TOP_Y = 26;
+var EXTRA_LIFE_AT = 1500;
+
+/* ------------------------------------------------------------------ *
+ *  state
+ * ------------------------------------------------------------------ */
+var state = 'attract', stateT = 0, frames = 0;
+var score = 0, level = 1, lives = 3, nextExtra = EXTRA_LIFE_AT;
+var hi = 0;
+try { hi = parseInt(window.localStorage.getItem('si_hi') || '0', 10) || 0; } catch (e) { hi = 0; }
+function saveHi() { try { window.localStorage.setItem('si_hi', String(hi)); } catch (e) {} }
+
+var aliens = [], fleet = null;
+var player = { x: 16, y: PLAYER_Y, w: 13, h: 8 };
+var bullet = null, bombs = [], booms = [], pops = [];
+var shields = [], ufo = null, ufoTimer = 0, bombTimer = 0, stepSnd = 0;
+var paused = false;
+
+/* ------------------------------------------------------------------ *
+ *  shields
+ * ------------------------------------------------------------------ */
+function makeShield(x) {
+  var px = new Uint8Array(SW * SH);
+  for (var y = 0; y < SH; y++) {
+    for (var xx = 0; xx < SW; xx++) {
+      var on = 1;
+      if (y < 4) {
+        var cut = 4 - y;
+        if (xx < cut || xx >= SW - cut) on = 0;
+      }
+      if (y >= 9) {
+        var t = (y - 9) / (SH - 1 - 9);
+        var hw = 1 + t * 3.5;
+        if (Math.abs(xx - (SW - 1) / 2) <= hw) on = 0;
+      }
+      px[y * SW + xx] = on;
+    }
+  }
+  var c = document.createElement('canvas');
+  c.width = SW; c.height = SH;
+  return { x: x, y: SHIELD_Y, px: px, canvas: c, dirty: true };
+}
+
+function buildShields() {
+  shields = [];
+  for (var i = 0; i < 4; i++) shields.push(makeShield(33 + i * 45));
+}
+
+function paintShield(s) {
+  var g = s.canvas.getContext('2d');
+  g.clearRect(0, 0, SW, SH);
+  g.fillStyle = COL.wall;
+  for (var y = 0; y < SH; y++)
+    for (var x = 0; x < SW; x++)
+      if (s.px[y * SW + x]) g.fillRect(x, y, 1, 1);
+  s.dirty = false;
+}
+
+function shieldPixelAt(x, y) {
+  for (var i = 0; i < shields.length; i++) {
+    var s = shields[i];
+    var lx = Math.floor(x - s.x), ly = Math.floor(y - s.y);
+    if (lx >= 0 && lx < SW && ly >= 0 && ly < SH && s.px[ly * SW + lx])
+      return { s: s, lx: lx, ly: ly };
+  }
+  return null;
+}
+
+function blastShield(s, lx, ly, r) {
+  for (var dy = -r; dy <= r; dy++) {
+    for (var dx = -r - 1; dx <= r + 1; dx++) {
+      var x = lx + dx, y = ly + dy;
+      if (x < 0 || x >= SW || y < 0 || y >= SH) continue;
+      var d = Math.sqrt(dx * dx * 0.7 + dy * dy);
+      if (d <= r + Math.random() * 0.9) s.px[y * SW + x] = 0;
+    }
+  }
+  s.dirty = true;
+}
+
+function eraseShieldRect(x, y, w, h) {
+  for (var i = 0; i < shields.length; i++) {
+    var s = shields[i];
+    if (x + w <= s.x || x >= s.x + SW || y + h <= s.y || y >= s.y + SH) continue;
+    for (var yy = 0; yy < SH; yy++) {
+      for (var xx = 0; xx < SW; xx++) {
+        var gx = s.x + xx, gy = s.y + yy;
+        if (gx >= x && gx < x + w && gy >= y && gy < y + h) s.px[yy * SW + xx] = 0;
+      }
+    }
+    s.dirty = true;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  fleet
+ * ------------------------------------------------------------------ */
+function buildFleet() {
+  aliens = [];
+  for (var r = 0; r < ROWS; r++) {
+    for (var c = 0; c < COLS; c++) {
+      aliens.push({ r: r, c: c, type: r === 0 ? 0 : (r < 3 ? 1 : 2), alive: true });
+    }
+  }
+  fleet = {
+    x: FLEET_X0,
+    y: FLEET_Y0 + Math.min(level - 1, 6) * 8,
+    dir: 1,
+    frame: 0,
+    timer: 30
+  };
+}
+
+function aliveCount() {
+  var n = 0;
+  for (var i = 0; i < aliens.length; i++) if (aliens[i].alive) n++;
+  return n;
+}
+
+function alienBox(a) {
+  var sp = SPR.alien[a.type][fleet.frame];
+  var cx = fleet.x + a.c * CW;
+  var cy = fleet.y + a.r * CH;
+  return {
+    x: cx + ((CW - sp.width) >> 1),
+    y: cy,
+    w: sp.width,
+    h: sp.height,
+    sp: sp
+  };
+}
+
+function stepDelay() {
+  var n = aliveCount();
+  var d = Math.round(n * 0.45) + 1 - Math.min(8, (level - 1) * 2);
+  return Math.max(1, d);
+}
+
+function fleetStep() {
+  var minC = 99, maxC = -1, i, a;
+  for (i = 0; i < aliens.length; i++) {
+    a = aliens[i];
+    if (!a.alive) continue;
+    if (a.c < minC) minC = a.c;
+    if (a.c > maxC) maxC = a.c;
+  }
+  if (maxC < 0) return;
+
+  var left = fleet.x + minC * CW + 2;
+  var right = fleet.x + (maxC + 1) * CW - 2;
+  var drop = false;
+
+  if (fleet.dir > 0 && right + STEP_X > W - EDGE) drop = true;
+  if (fleet.dir < 0 && left - STEP_X < EDGE) drop = true;
+
+  if (drop) {
+    fleet.dir *= -1;
+    fleet.y += STEP_Y;
+  } else {
+    fleet.x += fleet.dir * STEP_X;
+  }
+  fleet.frame ^= 1;
+
+  sndStep(stepSnd);
+  stepSnd = (stepSnd + 1) & 3;
+
+  /* invaders chew through whatever shield they touch */
+  for (i = 0; i < aliens.length; i++) {
+    a = aliens[i];
+    if (!a.alive) continue;
+    var b = alienBox(a);
+    if (b.y + b.h >= SHIELD_Y && b.y <= SHIELD_Y + SH) eraseShieldRect(b.x, b.y, b.w, b.h);
+    if (b.y + b.h >= PLAYER_Y) {
+      lives = 0;
+      killPlayer(true);
+      return;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  helpers
+ * ------------------------------------------------------------------ */
+function hit(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+}
+
+function addScore(n) {
+  score += n;
+  if (score > hi) { hi = score; saveHi(); }
+  if (score >= nextExtra) {
+    nextExtra += EXTRA_LIFE_AT;
+    lives++;
+    sndExtra();
+  }
+}
+
+function pop(x, y, txt, color) {
+  pops.push({ x: x, y: y, t: 90, txt: String(txt), color: color || COL.hud });
+}
+
+/* ------------------------------------------------------------------ *
+ *  game flow
+ * ------------------------------------------------------------------ */
+function newGame() {
+  score = 0; level = 1; lives = 3; nextExtra = EXTRA_LIFE_AT;
+  startLevel();
+  state = 'play'; stateT = 0;
+}
+
+function startLevel() {
+  buildFleet();
+  buildShields();
+  bullet = null;
+  bombs = []; booms = []; pops = [];
+  ufo = null;
+  ufoTimer = 700 + Math.floor(Math.random() * 500);
+  bombTimer = 60;
+  player.x = 16;
+  stepSnd = 0;
+}
+
+function killPlayer(invaded) {
+  if (state !== 'play') return;
+  state = 'dying';
+  stateT = invaded ? 140 : 110;
+  bullet = null;
+  sndShip();
+}
+
+function respawn() {
+  lives--;
+  if (lives <= 0) {
+    state = 'gameover';
+    stateT = 0;
+    saveHi();
+  } else {
+    bombs = [];
+    player.x = 16;
+    state = 'play';
+    stateT = 0;
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  input
+ * ------------------------------------------------------------------ */
+var keys = {};
+var BLOCK = { ArrowLeft: 1, ArrowRight: 1, ArrowUp: 1, ArrowDown: 1, Space: 1, Enter: 1 };
+
+window.addEventListener('keydown', function (e) {
+  if (BLOCK[e.code]) e.preventDefault();
+  if (e.repeat) return;
+  keys[e.code] = true;
+  ac();
+
+  if (e.code === 'KeyM') { muted = !muted; return; }
+  if (e.code === 'KeyP' && (state === 'play' || state === 'dying')) { paused = !paused; return; }
+
+  if (state === 'attract' && (e.code === 'Space' || e.code === 'Enter' || e.code === 'ArrowUp')) {
+    newGame();
+  } else if (state === 'gameover' && stateT > 45 &&
+             (e.code === 'Space' || e.code === 'Enter' || e.code === 'ArrowUp')) {
+    state = 'attract'; stateT = 0;
+  }
+});
+
+window.addEventListener('keyup', function (e) { keys[e.code] = false; });
+window.addEventListener('blur', function () { keys = {}; });
+
+/* ------------------------------------------------------------------ *
+ *  update
+ * ------------------------------------------------------------------ */
+function update() {
+  frames++;
+  stateT++;
+
+  for (var p = pops.length - 1; p >= 0; p--) {
+    pops[p].t--;
+    if (pops[p].t <= 0) pops.splice(p, 1);
+  }
+  for (var b = booms.length - 1; b >= 0; b--) {
+    booms[b].t--;
+    if (booms[b].t <= 0) booms.splice(b, 1);
+  }
+
+  if (state === 'attract') return;
+
+  if (state === 'dying') {
+    updateUfo(true);
+    if (stateT <= 0) respawn();
+    else if (stateT === 1) respawn();
+    if (stateT >= 110) respawn();
+    return;
+  }
+
+  if (state === 'clear') {
+    if (stateT > 110) { level++; startLevel(); state = 'play'; stateT = 0; }
+    return;
+  }
+
+  if (state === 'gameover') return;
+
+  /* ---- player ---- */
+  var sp = 1.6;
+  if (keys.ArrowLeft) player.x -= sp;
+  if (keys.ArrowRight) player.x += sp;
+  if (player.x < EDGE) player.x = EDGE;
+  if (player.x > W - EDGE - player.w) player.x = W - EDGE - player.w;
+
+  if ((keys.Space || keys.ArrowUp) && !bullet) {
+    bullet = { x: Math.round(player.x + 6), y: player.y - 4, sp: 5 };
+    sndShoot();
+  }
+
+  /* ---- fleet ---- */
+  fleet.timer--;
+  if (fleet.timer <= 0) {
+    fleetStep();
+    fleet.timer = stepDelay();
+    if (state !== 'play') return;
+  }
+
+  /* ---- player bullet (sub-stepped so nothing is tunnelled through) ---- */
+  if (bullet) {
+    var steps = Math.ceil(bullet.sp), i, j;
+    for (i = 0; i < steps && bullet; i++) {
+      bullet.y -= bullet.sp / steps;
+      if (bullet.y < TOP_Y) { bullet = null; break; }
+
+      /* shields */
+      var sh = shieldPixelAt(bullet.x, bullet.y);
+      if (sh) { blastShield(sh.s, sh.lx, sh.ly, 2); sndShield(); bullet = null; break; }
+
+      /* ufo */
+      if (ufo && ufo.alive &&
+          hit(bullet.x, bullet.y, 1, 4, ufo.x, UFO_Y, 16, 7)) {
+        var vals = [50, 100, 150, 300];
+        var v = vals[Math.floor(Math.random() * vals.length)];
+        addScore(v);
+        pop(ufo.x, UFO_Y, String(v), COL.ufo);
+        booms.push({ x: ufo.x + 1, y: UFO_Y, t: 20, sp: SPR.ufoBoom });
+        ufo.alive = false;
+        ufo = null;
+        ufoTimer = 800 + Math.floor(Math.random() * 600);
+        sndUfoHit();
+        bullet = null;
+        break;
+      }
+
+      /* aliens */
+      for (j = 0; j < aliens.length; j++) {
+        var a = aliens[j];
+        if (!a.alive) continue;
+        var bx = alienBox(a);
+        if (hit(bullet.x, bullet.y, 1, 4, bx.x, bx.y, bx.w, bx.h)) {
+          a.alive = false;
+          addScore(ALIEN_POINTS[a.type]);
+          booms.push({ x: bx.x + ((bx.w - 13) >> 1), y: bx.y, t: 14, sp: SPR.boom[a.type] });
+          sndAlien();
+          bullet = null;
+          break;
+        }
+      }
+      if (!bullet) break;
+
+      /* bombs can be shot out of the air */
+      for (j = bombs.length - 1; j >= 0; j--) {
+        var bm = bombs[j];
+        if (hit(bullet.x, bullet.y, 1, 4, bm.x, bm.y, 3, 7)) {
+          bombs.splice(j, 1);
+          booms.push({ x: bullet.x - 6, y: bullet.y - 4, t: 8, sp: SPR.boom[1] });
+          bullet = null;
+          break;
+        }
+      }
+    }
+  }
+
+  /* ---- level cleared ---- */
+  if (aliveCount() === 0) {
+    state = 'clear';
+    stateT = 0;
+    bullet = null;
+    bombs = [];
+    return;
+  }
+
+  /* ---- alien bombs ---- */
+  var maxBombs = Math.min(4, 2 + Math.floor((level - 1) / 2));
+  bombTimer--;
+  if (bombTimer <= 0 && bombs.length < maxBombs) {
+    dropBomb();
+    bombTimer = Math.max(12, 45 + Math.floor(Math.random() * 45) - level * 3);
+  }
+
+  for (var k = bombs.length - 1; k >= 0; k--) {
+    var bo = bombs[k];
+    var bs = Math.ceil(bo.sp), gone = false;
+    for (var t = 0; t < bs; t++) {
+      bo.y += bo.sp / bs;
+      var sp2 = shieldPixelAt(bo.x + 1, bo.y + 7);
+      if (sp2) { blastShield(sp2.s, sp2.lx, sp2.ly, 3); sndShield(); gone = true; break; }
+      if (hit(bo.x, bo.y, 3, 7, player.x, player.y, player.w, player.h)) {
+        bombs.splice(k, 1);
+        killPlayer(false);
+        return;
+      }
+      if (bo.y > GROUND_Y - 4) {
+        booms.push({ x: bo.x - 5, y: GROUND_Y - 8, t: 10, sp: SPR.boom[2] });
+        gone = true;
+        break;
+      }
+    }
+    if (gone) bombs.splice(k, 1);
+  }
+
+  updateUfo(false);
+}
+
+function dropBomb() {
+  var cols = [];
+  for (var c = 0; c < COLS; c++) {
+    var best = null;
+    for (var i = 0; i < aliens.length; i++) {
+      var a = aliens[i];
+      if (a.alive && a.c === c && (!best || a.r > best.r)) best = a;
+    }
+    if (best) cols.push(best);
+  }
+  if (!cols.length) return;
+  var src = cols[Math.floor(Math.random() * cols.length)];
+  var box = alienBox(src);
+  bombs.push({
+    x: Math.round(box.x + box.w / 2) - 1,
+    y: box.y + box.h,
+    sp: 1.5 + Math.min(1.2, level * 0.12),
+    type: Math.floor(Math.random() * 3)
+  });
+}
+
+function updateUfo(frozen) {
+  if (ufo) {
+    if (!frozen) ufo.x += ufo.dir * 0.8;
+    if (frames % 7 === 0) sndUfo((frames >> 3) & 1);
+    if (ufo.x < -18 || ufo.x > W + 2) ufo = null;
+  } else if (!frozen) {
+    ufoTimer--;
+    if (ufoTimer <= 0 && aliveCount() > 4) {
+      var dir = Math.random() < 0.5 ? 1 : -1;
+      ufo = { x: dir > 0 ? -16 : W, dir: dir, alive: true };
+      ufoTimer = 900 + Math.floor(Math.random() * 700);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  render
+ * ------------------------------------------------------------------ */
+function drawHud() {
+  drawText('SCORE', 8, 4, COL.dim, 1);
+  drawText(String(score).padStart(5, '0'), 8, 13, COL.hud, 1);
+
+  drawText('HI-SCORE', 82, 4, COL.dim, 1);
+  drawText(String(hi).padStart(5, '0'), 82, 13, COL.hud, 1);
+
+  drawText('LEVEL', 176, 4, COL.dim, 1);
+  drawText(String(level).padStart(2, '0'), 176, 13, COL.hud, 1);
+}
+
+function drawField() {
+  var i;
+
+  /* shields */
+  for (i = 0; i < shields.length; i++) {
+    var s = shields[i];
+    if (s.dirty) paintShield(s);
+    ctx.drawImage(s.canvas, s.x, s.y);
+  }
+
+  /* aliens */
+  if (fleet) {
+    for (i = 0; i < aliens.length; i++) {
+      var a = aliens[i];
+      if (!a.alive) continue;
+      var b = alienBox(a);
+      ctx.drawImage(b.sp, b.x, b.y);
+    }
+  }
+
+  /* ufo */
+  if (ufo) ctx.drawImage(SPR.ufo, Math.round(ufo.x), UFO_Y);
+
+  /* player */
+  if (state === 'dying') {
+    ctx.drawImage(SPR.shipBoom[(frames >> 2) & 1], Math.round(player.x), player.y);
+  } else if (state !== 'gameover' || stateT < 30) {
+    ctx.drawImage(SPR.ship, Math.round(player.x), player.y);
+  }
+
+  /* shots */
+  if (bullet) {
+    ctx.fillStyle = COL.shot;
+    ctx.fillRect(bullet.x, Math.round(bullet.y), 1, 4);
+  }
+  for (i = 0; i < bombs.length; i++) {
+    var bm = bombs[i];
+    ctx.drawImage(SPR.bomb[bm.type][(frames >> 3) & 1], bm.x, Math.round(bm.y));
+  }
+
+  /* explosions */
+  for (i = 0; i < booms.length; i++) {
+    ctx.drawImage(booms[i].sp, booms[i].x, booms[i].y);
+  }
+
+  /* score popups */
+  for (i = 0; i < pops.length; i++) {
+    var p = pops[i];
+    if (p.t > 60 || ((p.t >> 2) & 1)) drawText(p.txt, Math.round(p.x), p.y, p.color, 1);
+  }
+
+  /* ground */
+  ctx.fillStyle = COL.wall;
+  ctx.fillRect(0, GROUND_Y, W, 1);
+
+  /* lives */
+  drawText(String(Math.max(0, lives)), 8, 244, COL.hud, 1);
+  for (i = 0; i < Math.max(0, lives - 1) && i < 5; i++) {
+    ctx.drawImage(SPR.ship, 18 + i * 16, 244);
+  }
+  drawText('CREDIT 00', W - 58, 244, COL.dim, 1);
+}
+
+function drawAttract() {
+  drawTextC('SPACE INVADERS', 46, COL.ship, 2);
+
+  drawTextC('*SCORE ADVANCE TABLE*', 80, COL.hud, 1);
+
+  var rows = [
+    [SPR.ufo, '=? MYSTERY', COL.ufo],
+    [SPR.alien[0][0], '=30 POINTS', COL.squid],
+    [SPR.alien[1][0], '=20 POINTS', COL.crab],
+    [SPR.alien[2][0], '=10 POINTS', COL.octo]
+  ];
+  for (var i = 0; i < rows.length; i++) {
+    var y = 96 + i * 14;
+    var sp = rows[i][0];
+    ctx.drawImage(sp, 62 - (sp.width >> 1), y);
+    drawText(rows[i][1], 82, y + 1, rows[i][2], 1);
+  }
+
+  drawTextC('ARROW KEYS  LEFT / RIGHT', 162, COL.dim, 1);
+  drawTextC('UP OR SPACE TO FIRE', 174, COL.dim, 1);
+
+  if ((frames >> 5) & 1) drawTextC('PRESS SPACE TO START', 198, COL.ship, 1);
+
+  drawTextC('P PAUSE   M SOUND ' + (muted ? 'OFF' : 'ON'), 224, COL.dim, 1);
+
+  ctx.fillStyle = COL.wall;
+  ctx.fillRect(0, GROUND_Y, W, 1);
+}
+
+function render() {
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+
+  drawHud();
+
+  if (state === 'attract') {
+    drawAttract();
+  } else {
+    drawField();
+
+    if (state === 'clear' && ((frames >> 3) & 1)) {
+      drawTextC('WAVE ' + (level + 1), 120, COL.ship, 1);
+    }
+    if (state === 'gameover') {
+      drawTextC('GAME OVER', 108, COL.ufo, 2);
+      drawTextC('SCORE ' + String(score).padStart(5, '0'), 134, COL.hud, 1);
+      if (stateT > 45 && ((frames >> 5) & 1)) {
+        drawTextC('PRESS SPACE', 156, COL.dim, 1);
+      }
+    }
+    if (paused) {
+      drawTextC('PAUSED', 118, COL.hud, 2);
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ *  loop
+ * ------------------------------------------------------------------ */
+var STEP_MS = 1000 / 60, acc = 0, last = 0;
+
+function loop(now) {
+  if (!last) last = now;
+  var dt = now - last;
+  last = now;
+  if (dt > 250) dt = 250;
+  acc += dt;
+  var n = 0;
+  while (acc >= STEP_MS && n < 5) {
+    acc -= STEP_MS;
+    n++;
+    if (!paused) update();
+    else frames++;
+  }
+  render();
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>

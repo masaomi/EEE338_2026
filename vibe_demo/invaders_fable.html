@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Space Invaders</title>
+<style>
+html,body{margin:0;height:100%;background:#000;color:#fff;font-family:"Courier New",Courier,monospace;overflow:hidden}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center}
+canvas{background:#000;image-rendering:pixelated;image-rendering:crisp-edges;box-shadow:0 0 30px rgba(0,255,0,.15)}
+#hint{margin-top:8px;font-size:13px;color:#7f7;letter-spacing:1px;text-align:center}
+</style>
+</head>
+<body>
+<canvas id="c" width="448" height="512"></canvas>
+<div id="hint">&larr; &rarr; move &nbsp;&middot;&nbsp; &uarr; or SPACE fire &nbsp;&middot;&nbsp; P pause &nbsp;&middot;&nbsp; ENTER start</div>
+<script>
+(function(){
+"use strict";
+const W=448,H=512,S=2;
+const cv=document.getElementById("c"),cx=cv.getContext("2d");
+cx.imageSmoothingEnabled=false;
+function fit(){const s=Math.max(0.5,Math.min(window.innerWidth/W,(window.innerHeight-40)/H));cv.style.width=Math.floor(W*s)+"px";cv.style.height=Math.floor(H*s)+"px";}
+window.addEventListener("resize",fit);fit();
+
+const ART={
+squid:[[
+"...XX...",
+"..XXXX..",
+".XXXXXX.",
+"XX.XX.XX",
+"XXXXXXXX",
+"..X..X..",
+".X.XX.X.",
+"X.X..X.X"],[
+"...XX...",
+"..XXXX..",
+".XXXXXX.",
+"XX.XX.XX",
+"XXXXXXXX",
+".X.XX.X.",
+"X......X",
+".X....X."]],
+crab:[[
+"..X.....X..",
+"...X...X...",
+"..XXXXXXX..",
+".XX.XXX.XX.",
+"XXXXXXXXXXX",
+"X.XXXXXXX.X",
+"X.X.....X.X",
+"...XX.XX..."],[
+"..X.....X..",
+"X..X...X..X",
+"X.XXXXXXX.X",
+"XXX.XXX.XXX",
+"XXXXXXXXXXX",
+".XXXXXXXXX.",
+"..X.....X..",
+".X.......X."]],
+octo:[[
+"....XXXX....",
+".XXXXXXXXXX.",
+"XXXXXXXXXXXX",
+"XXX..XX..XXX",
+"XXXXXXXXXXXX",
+"...XX..XX...",
+"..XX.XX.XX..",
+"XX........XX"],[
+"....XXXX....",
+".XXXXXXXXXX.",
+"XXXXXXXXXXXX",
+"XXX..XX..XXX",
+"XXXXXXXXXXXX",
+"..XXX..XXX..",
+".XX..XX..XX.",
+"..XX....XX.."]],
+player:[
+"......X......",
+".....XXX.....",
+".....XXX.....",
+".XXXXXXXXXXX.",
+"XXXXXXXXXXXXX",
+"XXXXXXXXXXXXX",
+"XXXXXXXXXXXXX"],
+ufo:[
+".....XXXXXX.....",
+"...XXXXXXXXXX...",
+"..XXXXXXXXXXXX..",
+".XX.XX.XX.XX.XX.",
+"XXXXXXXXXXXXXXXX",
+"..XXX.XXXX.XXX..",
+"...X........X..."],
+boom:[
+".X...X.X...X.",
+"..X..X.X..X..",
+"...X.....X...",
+"XX.........XX",
+"...X.....X...",
+"..X..X.X..X..",
+".X...X.X...X."],
+pboom:[[
+"....X........",
+"X.......X....",
+"...X..X...X..",
+"......X.....X",
+".X..XXXX.X...",
+"...XXXXXXX...",
+"..XXXXXXXXX.."],[
+"..X.....X....",
+"......X....X.",
+".X...........",
+"....X..X..X..",
+"X....XXX.....",
+"..XXXXXXXX...",
+".XXXXXXXXXXX."]],
+bomb:[[
+"X..",
+".X.",
+"..X",
+".X.",
+"X..",
+".X.",
+"..X",
+".X."],[
+"..X",
+".X.",
+"X..",
+".X.",
+"..X",
+".X.",
+"X..",
+".X."]],
+shield:[
+"....XXXXXXXXXXXXXX....",
+"...XXXXXXXXXXXXXXXX...",
+"..XXXXXXXXXXXXXXXXXX..",
+".XXXXXXXXXXXXXXXXXXXX.",
+"XXXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXXXXXXXXXXXXXXXX",
+"XXXXXXXX......XXXXXXXX",
+"XXXXXXX........XXXXXXX",
+"XXXXXX..........XXXXXX",
+"XXXXXX..........XXXXXX"]
+};
+
+function mk(rows,color,s){
+  s=s||S;
+  const w=rows[0].length,h=rows.length,c=document.createElement("canvas");
+  c.width=w*s;c.height=h*s;
+  const g=c.getContext("2d");g.fillStyle=color;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)if(rows[y].charAt(x)==="X")g.fillRect(x*s,y*s,s,s);
+  return c;
+}
+const IMG={
+  alien:[ART.squid,ART.crab,ART.octo].map(function(f){return f.map(function(r){return mk(r,"#fff");});}),
+  player:mk(ART.player,"#3f3"),
+  life:mk(ART.player,"#3f3",1),
+  ufo:mk(ART.ufo,"#f55"),
+  boom:mk(ART.boom,"#fff"),
+  pboom:ART.pboom.map(function(r){return mk(r,"#3f3");}),
+  bomb:ART.bomb.map(function(r){return mk(r,"#fff");})
+};
+
+/* ---------- audio (optional, generated in-page) ---------- */
+let AC=null;
+function initAudio(){if(AC)return;try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){AC=null;}}
+function tone(f,d,type,vol){
+  if(!AC)return;
+  try{
+    if(AC.state==="suspended")AC.resume();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=type||"square";o.frequency.value=f;
+    g.gain.value=vol||0.05;
+    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+d);
+    o.connect(g);g.connect(AC.destination);
+    o.start();o.stop(AC.currentTime+d);
+  }catch(e){}
+}
+let beatN=0;
+function beat(){tone([110,98,87,82][beatN++&3],0.09,"square",0.06);}
+
+/* ---------- state ---------- */
+const POINTS=[30,20,10];
+const COLS=11,ROWS=5,CW=32,CH=32;
+const PW=IMG.player.width,PH=IMG.player.height;
+const GROUND=H-24,PY=GROUND-PH-8;
+let state="title",score=0,hi=0,level=1,lives=3;
+let px=0,pbullet=null,fireCd=0;
+let aliens=[],fx=0,fy=0,dir=1,alienTimer=0,frame=0,aliveCount=0;
+let bombs=[],bombTimer=0;
+let shields=[];
+let ufo=null,ufoTimer=0;
+let fxs=[];
+let stateT=0,blink=0;
+try{hi=parseInt(localStorage.getItem("si_hi")||"0",10)||0;}catch(e){}
+
+const KEY={};
+window.addEventListener("keydown",function(e){
+  if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"," ","Enter"].indexOf(e.key)>=0)e.preventDefault();
+  if(e.repeat)return;
+  KEY[e.key]=true;
+  initAudio();
+  if(e.key==="p"||e.key==="P"){
+    if(state==="playing")state="paused";
+    else if(state==="paused")state="playing";
+  }
+  if(e.key==="Enter"||e.key===" "||e.key==="ArrowUp"){
+    if(state==="title"||state==="gameover")newGame();
+  }
+});
+window.addEventListener("keyup",function(e){KEY[e.key]=false;});
+window.addEventListener("blur",function(){for(const k in KEY)KEY[k]=false;});
+
+function newGame(){score=0;level=1;lives=3;startLevel();state="playing";}
+function startLevel(){
+  buildAliens();buildShields();
+  bombs=[];bombTimer=1.5;ufo=null;ufoTimer=15+Math.random()*10;
+  pbullet=null;fireCd=0;px=(W-PW)/2;fxs=[];
+}
+function buildAliens(){
+  aliens=[];
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const t=r===0?0:(r<3?1:2);
+    aliens.push({r:r,c:c,t:t,alive:true,w:IMG.alien[t][0].width,h:IMG.alien[t][0].height});
+  }
+  fx=(W-COLS*CW)/2;fy=64+Math.min(level-1,5)*16;
+  dir=1;alienTimer=0;frame=0;aliveCount=ROWS*COLS;
+}
+function alienX(a){return fx+a.c*CW+(CW-a.w)/2;}
+function alienY(a){return fy+a.r*CH;}
+function calcDelay(){return Math.max(30,(40+aliveCount*12)*Math.pow(0.9,level-1));}
+
+function buildShields(){
+  shields=[];
+  const n=4,sw=22*S,gap=(W-n*sw)/(n+1);
+  for(let i=0;i<n;i++){
+    shields.push({x:Math.round(gap+i*(sw+gap)),y:H-116,
+      g:ART.shield.map(function(r){return r.split("").map(function(ch){return ch==="X";});})});
+  }
+}
+function shieldHit(x,y,w,h,rad){
+  for(const s of shields){
+    if(x+w<s.x||x>s.x+22*S||y+h<s.y||y>s.y+16*S)continue;
+    const x0=Math.max(0,Math.floor((x-s.x)/S)),x1=Math.min(21,Math.floor((x+w-1-s.x)/S));
+    const y0=Math.max(0,Math.floor((y-s.y)/S)),y1=Math.min(15,Math.floor((y+h-1-s.y)/S));
+    for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)if(s.g[gy][gx]){
+      for(let ey=gy-rad;ey<=gy+rad;ey++)for(let ex=gx-rad;ex<=gx+rad;ex++)
+        if(ey>=0&&ey<16&&ex>=0&&ex<22&&Math.random()<0.8)s.g[ey][ex]=false;
+      return true;
+    }
+  }
+  return false;
+}
+function shieldClearRect(x,y,w,h){
+  for(const s of shields){
+    if(x+w<s.x||x>s.x+22*S||y+h<s.y||y>s.y+16*S)continue;
+    const x0=Math.max(0,Math.floor((x-s.x)/S)),x1=Math.min(21,Math.floor((x+w-1-s.x)/S));
+    const y0=Math.max(0,Math.floor((y-s.y)/S)),y1=Math.min(15,Math.floor((y+h-1-s.y)/S));
+    for(let gy=y0;gy<=y1;gy++)for(let gx=x0;gx<=x1;gx++)s.g[gy][gx]=false;
+  }
+}
+
+function rect(x1,y1,w1,h1,x2,y2,w2,h2){return x1<x2+w2&&x1+w1>x2&&y1<y2+h2&&y1+h1>y2;}
+
+function stepAliens(){
+  let minX=1e9,maxX=-1e9;
+  for(const a of aliens)if(a.alive){const x=alienX(a);if(x<minX)minX=x;if(x+a.w>maxX)maxX=x+a.w;}
+  const dx=8;
+  if((dir>0&&maxX+dx>W-6)||(dir<0&&minX-dx<6)){fy+=16;dir=-dir;}
+  else fx+=dir*dx;
+  frame^=1;beat();
+  for(const a of aliens)if(a.alive&&alienY(a)+a.h>=PY){gameOver();return;}
+  for(const a of aliens)if(a.alive)shieldClearRect(alienX(a),alienY(a),a.w,a.h);
+}
+function dropBomb(){
+  const cols=[];
+  for(let c=0;c<COLS;c++){
+    let low=null;
+    for(const a of aliens)if(a.alive&&a.c===c&&(!low||a.r>low.r))low=a;
+    if(low)cols.push(low);
+  }
+  if(!cols.length)return;
+  let a;
+  if(Math.random()<0.3){
+    a=cols.reduce(function(b,o){return Math.abs(alienX(o)-px)<Math.abs(alienX(b)-px)?o:b;});
+  }else a=cols[Math.floor(Math.random()*cols.length)];
+  bombs.push({x:alienX(a)+a.w/2-3,y:alienY(a)+a.h,vy:140+level*15,f:0});
+}
+function killPlayer(){state="dying";stateT=1.5;tone(80,0.6,"sawtooth",0.08);}
+function gameOver(){state="gameover";try{localStorage.setItem("si_hi",String(hi));}catch(e){}}
+
+function updatePlay(dt){
+  const sp=200;
+  if(KEY.ArrowLeft)px-=sp*dt;
+  if(KEY.ArrowRight)px+=sp*dt;
+  px=Math.max(6,Math.min(W-PW-6,px));
+  fireCd-=dt;
+  if((KEY[" "]||KEY.ArrowUp)&&!pbullet&&fireCd<=0){
+    pbullet={x:px+PW/2-1,y:PY-8};fireCd=0.15;tone(880,0.08,"square",0.04);
+  }
+  if(pbullet){
+    pbullet.y-=520*dt;
+    if(pbullet.y<24)pbullet=null;
+    else if(shieldHit(pbullet.x,pbullet.y,2,8,1))pbullet=null;
+    else{
+      let hit=false;
+      for(const a of aliens){
+        if(!a.alive)continue;
+        const ax=alienX(a),ay=alienY(a);
+        if(rect(pbullet.x,pbullet.y,2,8,ax,ay,a.w,a.h)){
+          a.alive=false;aliveCount--;score+=POINTS[a.t];
+          fxs.push({img:IMG.boom,x:ax+a.w/2-IMG.boom.width/2,y:ay,t:0.25});
+          tone(200,0.15,"sawtooth",0.05);hit=true;break;
+        }
+      }
+      if(hit){
+        pbullet=null;
+        if(aliveCount===0){state="levelclear";stateT=2;if(hi<score)hi=score;return;}
+      }else if(ufo&&rect(pbullet.x,pbullet.y,2,8,ufo.x,ufo.y,IMG.ufo.width,IMG.ufo.height)){
+        const pts=[50,100,150,300][Math.floor(Math.random()*4)];
+        score+=pts;
+        fxs.push({text:String(pts),x:ufo.x+IMG.ufo.width/2,y:ufo.y,t:1});
+        ufo=null;pbullet=null;tone(1200,0.3,"triangle",0.06);
+      }
+    }
+  }
+  alienTimer+=dt*1000;
+  if(alienTimer>=calcDelay()){alienTimer=0;stepAliens();if(state!=="playing")return;}
+  bombTimer-=dt;
+  if(bombTimer<=0){
+    bombTimer=(0.6+Math.random()*1.4)*Math.pow(0.88,level-1);
+    if(bombs.length<3)dropBomb();
+  }
+  for(let i=bombs.length-1;i>=0;i--){
+    const b=bombs[i];
+    b.y+=b.vy*dt;b.f+=dt*10;
+    if(b.y>GROUND-4){bombs.splice(i,1);}
+    else if(shieldHit(b.x,b.y,6,16,1)){bombs.splice(i,1);}
+    else if(pbullet&&rect(b.x,b.y,6,16,pbullet.x,pbullet.y,2,8)){bombs.splice(i,1);pbullet=null;}
+    else if(rect(b.x,b.y,6,16,px,PY,PW,PH)){bombs.splice(i,1);killPlayer();return;}
+  }
+  if(ufo){
+    ufo.x+=ufo.vx*dt;
+    ufo.snd-=dt;
+    if(ufo.snd<=0){ufo.snd=0.2;ufo.hi=!ufo.hi;tone(ufo.hi?700:560,0.15,"triangle",0.03);}
+    if(ufo.x<-40||ufo.x>W+40)ufo=null;
+  }else{
+    ufoTimer-=dt;
+    if(ufoTimer<=0&&aliveCount>5){
+      ufoTimer=18+Math.random()*12;
+      const fromLeft=Math.random()<0.5;
+      ufo={x:fromLeft?-32:W,y:28,vx:fromLeft?70:-70,snd:0,hi:false};
+    }
+  }
+  if(hi<score)hi=score;
+}
+
+function update(dt){
+  blink+=dt;
+  for(let i=fxs.length-1;i>=0;i--){fxs[i].t-=dt;if(fxs[i].t<=0)fxs.splice(i,1);}
+  if(state==="playing")updatePlay(dt);
+  else if(state==="dying"){
+    stateT-=dt;
+    if(stateT<=0){
+      lives--;
+      if(lives<=0)gameOver();
+      else{state="playing";bombs=[];pbullet=null;px=(W-PW)/2;}
+    }
+  }else if(state==="levelclear"){
+    stateT-=dt;
+    if(stateT<=0){level++;startLevel();state="playing";}
+  }
+}
+
+/* ---------- drawing ---------- */
+const FONT="'Courier New',Courier,monospace";
+function pad(n){const s=String(n);return s.length>=4?s:("0000"+s).slice(-4);}
+function overlay(a,b){
+  cx.fillStyle="rgba(0,0,0,.65)";cx.fillRect(0,H/2-50,W,100);
+  cx.fillStyle="#fff";cx.textAlign="center";
+  cx.font="bold 24px "+FONT;cx.fillText(a,W/2,H/2-28);
+  cx.font="14px "+FONT;
+  if(b&&Math.floor(blink*2)%2===0)cx.fillText(b,W/2,H/2+10);
+}
+function drawShields(){
+  cx.fillStyle="#3f3";
+  for(const s of shields)for(let y=0;y<16;y++)for(let x=0;x<22;x++)if(s.g[y][x])cx.fillRect(s.x+x*S,s.y+y*S,S,S);
+}
+function drawTitle(){
+  cx.textAlign="center";cx.fillStyle="#3f3";cx.font="bold 32px "+FONT;
+  cx.fillText("SPACE INVADERS",W/2,90);
+  cx.fillStyle="#fff";cx.font="16px "+FONT;
+  cx.fillText("* SCORE ADVANCE TABLE *",W/2,170);
+  const rows=[[IMG.ufo,"= ? MYSTERY"],[IMG.alien[0][0],"= 30 POINTS"],[IMG.alien[1][0],"= 20 POINTS"],[IMG.alien[2][0],"= 10 POINTS"]];
+  for(let i=0;i<rows.length;i++){
+    const y=210+i*32,im=rows[i][0];
+    cx.drawImage(im,Math.round(W/2-70-im.width/2),y);
+    cx.textAlign="left";cx.fillText(rows[i][1],W/2-40,y+1);
+  }
+  if(Math.floor(blink*2)%2===0){cx.textAlign="center";cx.fillStyle="#3f3";cx.fillText("PRESS ENTER TO START",W/2,380);}
+  cx.fillStyle="#888";cx.font="13px "+FONT;cx.textAlign="center";
+  cx.fillText("ARROWS MOVE   UP / SPACE FIRE   P PAUSE",W/2,420);
+}
+function draw(){
+  cx.fillStyle="#000";cx.fillRect(0,0,W,H);
+  cx.font="14px "+FONT;cx.textBaseline="top";cx.fillStyle="#fff";
+  cx.textAlign="left";cx.fillText("SCORE "+pad(score),8,6);
+  cx.textAlign="center";cx.fillText("HI-SCORE "+pad(hi),W/2,6);
+  cx.textAlign="right";cx.fillText("LEVEL "+level,W-8,6);
+  if(state==="title"){drawTitle();return;}
+  cx.fillStyle="#3f3";cx.fillRect(0,GROUND,W,2);
+  cx.fillStyle="#fff";cx.textAlign="left";cx.fillText(String(lives),8,GROUND+6);
+  for(let i=0;i<lives-1;i++)cx.drawImage(IMG.life,24+i*18,GROUND+8);
+  drawShields();
+  for(const a of aliens)if(a.alive)cx.drawImage(IMG.alien[a.t][frame],Math.round(alienX(a)),Math.round(alienY(a)));
+  if(ufo)cx.drawImage(IMG.ufo,Math.round(ufo.x),ufo.y);
+  for(const b of bombs)cx.drawImage(IMG.bomb[Math.floor(b.f)%2],Math.round(b.x),Math.round(b.y));
+  if(pbullet){cx.fillStyle="#fff";cx.fillRect(Math.round(pbullet.x),Math.round(pbullet.y),2,8);}
+  if(state==="dying")cx.drawImage(IMG.pboom[Math.floor(stateT*10)%2],Math.round(px),PY);
+  else if(state!=="gameover")cx.drawImage(IMG.player,Math.round(px),PY);
+  for(const f of fxs){
+    if(f.img)cx.drawImage(f.img,Math.round(f.x),Math.round(f.y));
+    else{cx.fillStyle="#f55";cx.textAlign="center";cx.fillText(f.text,f.x,f.y);}
+  }
+  if(state==="paused")overlay("PAUSED","press P to resume");
+  else if(state==="gameover")overlay("GAME OVER","press ENTER to play again");
+  else if(state==="levelclear")overlay("LEVEL "+level+" CLEARED","");
+}
+
+let last=0;
+function loop(t){
+  const dt=Math.min(0.05,((t-last)/1000)||0);
+  last=t;
+  update(dt);draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
