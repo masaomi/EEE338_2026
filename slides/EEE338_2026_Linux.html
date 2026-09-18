@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EEE338 2026 — Linux / Basic Informatics</title>
+
+<style>
+:root{ --ink:#1b1b1b; --dim:#6a6a6a; --rule:#e0e0dc; --hot:#b3261e;
+       --cool:#1b5e9e; --paper:#fdfdfb; --code:#f2f2ef; }
+*{ box-sizing:border-box; }
+body{ font-family:"Helvetica Neue",Helvetica,Arial,"Hiragino Sans",sans-serif;
+      color:var(--ink); background:var(--paper); line-height:1.6;
+      max-width:54em; margin:0 auto; padding:2.5em 1.6em 6em; font-size:16.5px; }
+h1,h2,h3,h4{ line-height:1.25; margin:.2em 0 .5em; font-weight:700; }
+h1{ font-size:1.7em; } h2{ font-size:1.35em; } h3{ font-size:1.12em; color:var(--cool); }
+p,li{ margin:.45em 0; } ul,ol{ padding-left:1.5em; }
+a{ color:var(--cool); }
+code{ background:var(--code); padding:.08em .32em; border-radius:3px;
+      font-family:"SF Mono",Menlo,Consolas,monospace; font-size:.88em; }
+pre{ background:#22242a; color:#e6e6e6; padding:.85em 1.05em; border-radius:6px;
+     overflow-x:auto; font-size:.82em; line-height:1.45; }
+pre code{ background:none; color:inherit; padding:0; font-size:1em; }
+blockquote{ margin:1em 0; padding:.6em 1em; border-left:5px solid var(--cool);
+            background:#f1f5f9; border-radius:0 5px 5px 0; }
+table{ border-collapse:collapse; margin:1em 0; font-size:.92em; }
+th{ background:#ececea; border-bottom:2px solid var(--ink); text-align:left; padding:.35em .6em; }
+td{ border-bottom:1px solid var(--rule); padding:.3em .6em; vertical-align:top; }
+img{ max-width:100%; height:auto; display:block; margin:.7em 0; }
+
+/* one notebook cell == one slide in the original. Keep them visually separate. */
+.slide{ padding:1.4em 0 1.1em; border-bottom:1px solid var(--rule); position:relative; }
+.slide:last-of-type{ border-bottom:none; }
+.slide > :first-child{ margin-top:0; }
+.slide::before{ content:attr(data-n); position:absolute; right:0; top:1.5em;
+                font-size:.62em; color:#c3c3bd; font-family:Menlo,monospace; }
+
+/* classes the notebooks use, from rise.css -- scaled down for a document.
+   In RISE these are slide-sized (100px, 150px); here they would be absurd. */
+.small{ font-size:.85em; } .smaller{ font-size:.75em; }
+.question{ font-size:2.4em; font-weight:700; text-align:center; color:var(--cool);
+           margin:.8em 0; }
+.important{ font-size:2.2em; font-weight:700; text-align:center; color:var(--hot);
+            margin:.8em 0; }
+.row{ display:grid; grid-template-columns:1fr 1fr; gap:1.2em; }
+.row::after{ content:none; }
+.column{ float:none; width:auto; height:auto; padding:0; }
+.column p{ padding:0; }
+
+/* The vocabulary the slide deck uses, at document scale. Written into the
+   notebooks as plain HTML, so both generators have to know these names.
+   Keep in sync with STYLE in build_lecture_slides.py. */
+.spine{ margin:1em 0; padding:.6em .9em; border-left:6px solid var(--ink);
+        background:#f2f2ef; font-weight:600; }
+.spine.key{ border-left-color:var(--hot); background:#fdf3f2; color:var(--hot); }
+.src{ margin-top:1em; padding-top:.4em; border-top:1px solid var(--rule);
+      font-size:.78em; line-height:1.45; color:var(--dim); }
+.src a{ color:var(--dim); }
+.trap{ border:2px solid var(--hot); border-radius:5px; padding:.7em 1em;
+       background:#fdf3f2; margin:1em 0; }
+.meas{ border:2px solid #2e6f40; border-radius:5px; padding:.7em 1em;
+       background:#f2f8f3; margin:1em 0; }
+.trap > .lab,.meas > .lab{ display:block; font-size:.72em; letter-spacing:.1em;
+       text-transform:uppercase; font-weight:700; margin-bottom:.3em; }
+.trap > .lab{ color:var(--hot); } .meas > .lab{ color:#2e6f40; }
+.term{ background:#22242a; color:#e6e6e6; font-family:"SF Mono",Menlo,Consolas,monospace;
+       font-size:.82em; line-height:1.45; padding:.85em 1.05em; border-radius:6px;
+       white-space:pre; overflow-x:auto; margin:1em 0; }
+.term .u{ color:#8fd3ff; } .term .g{ color:#9ad39a; }
+.term .r{ color:#ff9a92; } .term .c{ color:#8a8f98; }
+.flow{ display:flex; align-items:center; gap:.45em; flex-wrap:wrap;
+       font-size:.88em; margin:1em 0; }
+.flow .b{ border:2px solid var(--ink); border-radius:5px; padding:.3em .6em;
+          background:#fff; font-weight:600; }
+.flow .b.cool{ border-color:var(--cool); color:var(--cool); }
+.flow .b.hot{ border-color:var(--hot); color:var(--hot); }
+.flow .b.ok{ border-color:#2e6f40; color:#2e6f40; }
+.flow .ar{ color:var(--dim); font-weight:700; }
+.barrow{ display:grid; grid-template-columns:11em 1fr 7em; align-items:center;
+         gap:.6em; margin:.35em 0; font-size:.88em; }
+.track{ background:#ececea; border-radius:3px; height:1.3em; display:block; }
+.bar{ display:block; height:100%; border-radius:3px; background:var(--cool); }
+.bar.grey{ background:#a9a9a4; } .bar.hot{ background:var(--hot); }
+.bar.ok{ background:#2e6f40; }
+.figs{ display:grid; grid-template-columns:1fr 1fr; gap:1em; margin:1em 0; }
+.figs.three{ grid-template-columns:1fr 1fr 1fr; }
+.fig{ text-align:center; padding:.8em .6em; border-radius:5px; background:#f2f2ef; }
+.fig.bad{ background:#fdf3f2; border:2px solid var(--hot); }
+.fig .cap{ font-size:.72em; letter-spacing:.09em; text-transform:uppercase; color:var(--dim); }
+.fig.bad .cap{ color:var(--hot); }
+.fig .num{ font-size:2em; font-weight:700; line-height:1.05; color:#6a6a6a; }
+.fig.bad .num{ color:var(--hot); }
+.fig .unit{ font-size:.72em; }
+.two{ display:grid; grid-template-columns:1fr 1fr; gap:1.2em; }
+.three{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:1em; }
+.tiny{ font-size:.78em; color:var(--dim); } .dim{ color:var(--dim); }
+tr.hi td{ background:#fdf3f2; font-weight:700; }
+tr.ok td{ background:#f2f8f3; }
+td.n{ text-align:right; font-family:Menlo,monospace; }
+kbd{ background:#eee; border:1px solid #bbb; border-bottom-width:2px; border-radius:3px;
+     padding:.05em .35em; font-family:Menlo,monospace; font-size:.85em; }
+.sectionbreak{ text-align:center; padding:1em 0; }
+.sectionbreak h1{ font-size:1.8em; margin:0; }
+.sectionbreak p{ color:var(--dim); letter-spacing:.04em; margin-top:.6em; }
+.ill{ width:100%; max-width:44em; height:auto; display:block; margin:1em auto; }
+.ill text{ font-family:"Helvetica Neue",Helvetica,Arial,sans-serif; }
+i, em, cite{ font-style:italic; }
+
+/* A figure drawn in a notebook cell may carry CSS-only motion; see the same
+   block in build_lecture_slides.py. Here there are no reveal sections to pause
+   off-screen, so the one rule that still applies is the one that matters most:
+   anyone whose OS asks for less motion gets the still figure. It is complete
+   without the animation -- that is the rule the figures are drawn to. */
+@media (prefers-reduced-motion:reduce){ svg .mov{ display:none; } }
+
+.figgap{ border:2px dashed #c9a227; background:#fdf9ec; border-radius:5px;
+         padding:1em; text-align:center; color:#7a6420; margin:.9em 0; font-size:.9em; }
+.figgap span{ font-size:.85em; color:#9a8a5a; }
+.srcnote{ font-size:.78em; color:var(--dim); background:#f1f1ee;
+          border:1px solid var(--rule); border-radius:5px; padding:.7em 1em; margin:0 0 1.5em; }
+.backlink{ position:fixed; top:.7em; right:.9em; font-size:.72em; background:#fff;
+           border:1px solid var(--rule); border-radius:4px; padding:.25em .6em;
+           text-decoration:none; color:var(--dim); z-index:9; }
+.backlink:hover{ color:var(--cool); border-color:var(--cool); }
+footer{ margin-top:3em; padding-top:1.2em; border-top:2px solid var(--ink);
+        font-size:.8em; color:var(--dim); }
+footer b{ color:var(--ink); }
+@media print{ body{ max-width:none; font-size:10.5pt; padding:0; }
+              pre{ background:#f4f4f2; color:#111; border:1px solid #ccc; }
+              .backlink{ display:none; } a{ color:inherit; text-decoration:none; }
+              .slide{ break-inside:avoid; } }
+</style>
+</head><body>
+<a class="backlink" style="right:6.6em" href="EEE338_2026_Linux_slides.html">present &rarr;</a>
+<div class="srcnote">
+  <b>EEE338 2026 — Linux / Basic Informatics</b> — OS, shell, file system, commands, shell scripts, AI agents.<br>
+  Rendered from <code>EEE338_2026_Linux.ipynb</code> on 2026-09-18 04:04.
+  <b>The content is the 2025 material</b>; only the title slide, the repository
+  link and the image paths were updated. Images load from the local
+  <code>png/</code> directory — this page needs no network.
+  Edit the notebook, not this file, then re-run
+  <code>python3 ai_2026/scripts/build_lecture_html.py</code>.
+</div>
+<section class="slide" data-n="1">
+<h1 id="eee338-basic-informatics--linux">EEE338 Basic Informatics / Linux</h1>
+<ul>
+<li>18 Sep. 2026</li>
+<li>Masaomi Hatakeyama
+<ul>
+<li><a href="https://github.com/masaomi/EEE338_2026">https://github.com/masaomi/EEE338_2026</a></li>
+</ul></li>
+</ul>
+</section>
+<section class="slide" data-n="2">
+<h1 id="contents-today">Contents Today</h1>
+<p><em>Morning: NGS Bioinformatics, then this. Afternoon, 13:00–17:00:</em></p>
+<ol type="1">
+<li><strong>At your own keyboard</strong> — <code>EEE338_2026_Command_Practice</code>
+<ul>
+<li>§3–§5 by hand. §6 sets up the agent, and §7 is the first thing you ask it</li>
+</ul></li>
+<li><strong>AI agents</strong> — Claude Code, part 2
+<ul>
+<li>the lecture lands better once you have used one for half an hour</li>
+</ul></li>
+<li><strong>At your own keyboard again</strong> — <code>EEE338_2026_Claude_Code_part2</code></li>
+</ol>
+</section>
+<section class="slide" data-n="3">
+<h1 id="required-skills-computationally">Required Skills computationally</h1>
+<ul>
+<li><strong>Unix Operation</strong> (command typing)
+<ul>
+<li>Many programs run on Unix</li>
+<li>Data is stored on Unix</li>
+</ul></li>
+<li><strong>Scripting</strong> (Programming)
+<ul>
+<li>Software does not do everything</li>
+<li>You need data conversion/processing by yourself</li>
+</ul></li>
+<li><strong>Agentic AI control</strong> (vibe coding)
+<ul>
+<li>An agent can write the script for you</li>
+<li>What comes back is only as good as what you can ask for, and check</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide" data-n="4">
+<h1 id="what-is-unix">What is Unix?</h1>
+<p>Wikipedia</p>
+<pre><code>  Unix (officially trademarked as UNIX) is a
+  multitasking,
+  multi-user computer
+  operating system
+  originally developed in 1969 by a group of 
+  AT&amp;T employees at Bell Labs,</code></pre>
+<p><strong>Operating System</strong></p>
+<ul>
+<li>Multi-Tasking: some programs run at the same time</li>
+<li>Multi-User: some users can operate at the same time</li>
+</ul>
+</section>
+<section class="slide" data-n="5">
+<h1 id="what-is-operating-system">What is operating system?</h1>
+<div class="row">
+  <div class="column" align="center">
+    <img src="../png/os.png" width="600px">
+  </div>
+  <div class="column" align="left">
+<br>
+    Operating system<br>
+    = Basic software<br><br>
+    TWO Popular OSs<br>
+        1. WindowsXX<br>
+        2. Unix<br>
+
+  </div>
+</div>
+</section>
+<section class="slide" data-n="6">
+<ul>
+<li>Application software</li>
+<li>Body and mind</li>
+</ul>
+</section>
+<section class="slide" data-n="7">
+<h1 id="unix-history">Unix history</h1>
+<div align="center">
+    <img src="../png/unix_history.png" width="600px">
+</div>
+
+<p>Wikipedia</p>
+</section>
+<section class="slide" data-n="8">
+<h1 id="unix-and-unix-like-os">Unix and Unix-like OS</h1>
+<ul>
+<li>AIX, IBM</li>
+<li>HP-UX, Hewlett-Packard</li>
+<li>Soralis, Sun Microsystems</li>
+<li>macOS (Mac OS X), iOS, Apple, 10.5-</li>
+<li>Android, Google</li>
+<li>Linux, FreeBSD, Open Source</li>
+</ul>
+</section>
+<section class="slide" data-n="9">
+<h1 id="linux-distribution">Linux Distribution</h1>
+<div class="row">
+  <div class="column" align="center">
+    <img src="../png/gnu-linux-distribution-timeline.png" width="600px">
+  </div>
+  <div class="column" align="left">
+    <img src="../png/Top-Linux-Subcategories-by-Market_Share.jpg" width="350px">
+    </div>
+</div>
+
+<span class="small">
+https://cognitivewaves.wordpress.com/linux-distributions, 
+https://truelist.co/blog/linux-statistics/</span>
+</section>
+<section class="slide" data-n="10">
+<h1 id="kens-group-server-spec">Ken's group server spec</h1>
+<p>Science cloud node (S3IT)</p>
+<ul>
+<li>Debian Linux Operating System (Debian10)</li>
+<li>128 GB RAM Randam Access Memory</li>
+<li>32 cores CPU Central Processing Unit</li>
+<li>Intel Xeon Processor</li>
+<li>2 TB Hard-Disk (/scratch)</li>
+</ul>
+</section>
+<section class="slide" data-n="11">
+<h1 id="amount-of-information">Amount of Information</h1>
+<ul>
+<li>bit: binary digit: 0/1</li>
+<li>1 byte = 8 bit</li>
+<li>1 KB = 1000 byte</li>
+<li>1 MB = 1000 KB</li>
+<li>1 GB = 1000 MB</li>
+<li>1 TB = 1000 GB</li>
+</ul>
+</section>
+<section class="slide" data-n="12">
+<h1 id="1-token--the-unit-the-models-are-billed-in">1 token — the unit the models are billed in</h1>
+<p>Not a letter, not a word: a <strong>chunk the model was trained to see as one thing</strong>.</p>
+<div style="border:2px solid #e0e0dc; border-radius:6px; padding:.6em .7em; background:#fff; margin:.5em 0 .3em">
+  <div style="font-size:.5em; color:#6a6a6a; font-weight:700; letter-spacing:.04em; margin-bottom:.35em">THE SAME 100 BYTES, CUT INTO TOKENS</div>
+  <div style="display:grid; grid-template-columns:8.5em 1fr 5em; gap:.35em .6em; align-items:center">
+<div style="text-align:right; font-size:.52em; color:#6a6a6a">English prose</div><div><div style="display:flex; height:1.15em; background:#ececea; border-radius:3px; padding:1px"><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div></div></div><div style="font-size:.5em; color:#6a6a6a; white-space:nowrap">31 tokens</div><div style="text-align:right; font-size:.52em; color:#6a6a6a">Japanese</div><div><div style="display:flex; height:1.15em; background:#ececea; border-radius:3px; padding:1px"><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#1b5e9e; margin-right:1px; border-radius:1px"></div></div></div><div style="font-size:.5em; color:#6a6a6a; white-space:nowrap">34 tokens</div><div style="text-align:right; font-size:.52em; color:#6a6a6a">a shell command</div><div><div style="display:flex; height:1.15em; background:#ececea; border-radius:3px; padding:1px"><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#6a6a6a; margin-right:1px; border-radius:1px"></div></div></div><div style="font-size:.5em; color:#6a6a6a; white-space:nowrap">67 tokens</div><div style="text-align:right; font-size:.52em; color:#6a6a6a">DNA, 101 bp</div><div><div style="display:flex; height:1.15em; background:#ececea; border-radius:3px; padding:1px"><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div></div></div><div style="font-size:.5em; color:#6a6a6a; white-space:nowrap">98 tokens</div><div style="text-align:right; font-size:.52em; color:#6a6a6a">a quality line</div><div><div style="display:flex; height:1.15em; background:#ececea; border-radius:3px; padding:1px"><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div><div style="flex:1; background:#b3261e; margin-right:1px; border-radius:1px"></div></div></div><div style="font-size:.5em; color:#6a6a6a; white-space:nowrap">95 tokens</div>  </div>
+  <div style="font-size:.46em; color:#6a6a6a; margin-top:.45em">Measured with Anthropic&#8217;s token counter on 18 Sep 2026. More pieces for the same bytes means more to pay for.</div>
+</div>
+
+<div class="two" style="font-size:.74em; margin-top:.15em">
+<div><b>English: about 3&ndash;4 bytes a token.</b> That is the number people quote. It is a number about <i>English</i>.</div>
+<div><b>Your data: about 1 byte a token.</b> <code>ATGC</code> is not a word. Sequence and quality lines are cut almost one token per character &mdash; <b>three times the price of prose, byte for byte</b>.</div>
+</div>
+
+<div class="trap" style="font-size:.7em"><span class="lab">so, one FASTQ file</span>
+<code>hal_L_C.fastq</code> is <b>134 MB</b> &rarr; about <b>134 million tokens</b>: <b>134&times; the largest context window there is</b>, and some <b>400 dollars</b> at 3 dollars a million. <b>You do not paste data at an agent. You give it a command that reads the data.</b></div>
+
+<div class="spine"><b>There is no fixed answer.</b> Every vendor trains its own tokenizer, so the same file is a different number of tokens at Anthropic, at OpenAI, at Google &mdash; and different again on their next model. <b>Count it; do not assume it.</b></div>
+</section>
+<section class="slide" data-n="13">
+<h1 id="amount-of-information-1">Amount of Information</h1>
+<ul>
+<li>1 KiB = 1024 byte, Kilobinary byte, Kibi byte</li>
+<li>1 MiB = 1024 KiB, Megabinary byte, Mebi byte</li>
+<li>1 GiB = 1024 MiB, Gigabinary byte, Gibi byte</li>
+<li>1 TiB = 1024 GiB, Terabinary byte, Tebi byte</li>
+</ul>
+</section>
+<section class="slide" data-n="14">
+<h1 id="amount-of-nucleotides">Amount of Nucleotides</h1>
+<ul>
+<li>1 bp = base-pair</li>
+<li>1 kb = 1000 bp</li>
+<li>1 Mb = 1000 kb</li>
+<li>1 Gb = 1000 Mb</li>
+</ul>
+</section>
+<section class="slide" data-n="15">
+<h1 id="amount-nucleotide-length-of-dna">Amount (nucleotide length) of DNA</h1>
+<ul>
+<li>base-pair (bp)</li>
+<li>Human genome: 3.2 Gb Giga-basepairs (per haploid genome, actually 6.4 Gb)</li>
+<li><em>Arabidopsis thaliana</em>: 119 Mb</li>
+<li><em>Escherichia coli</em>: 4.6 Mb</li>
+<li><em>Triticum aestivum</em> (Wheat) : 17 Gb</li>
+</ul>
+</section>
+<section class="slide" data-n="16">
+<h1 id="exercise">Exercise</h1>
+<ul>
+<li>How many bytes of RAM is necessary to load Human genome data in a computer?</li>
+<li>1 base nucleotide needs 1 byte memory space</li>
+</ul>
+</section>
+<section class="slide" data-n="18">
+<h1 id="ngs-sequencing-cost">NGS sequencing cost</h1>
+  <div align="center">
+    <img src="../png/cost_per_genome.jpg" width="500px">
+  </div>
+
+<ul>
+<li>&lt; 50 CHF/Gb, Illumina NovaSeq, FGCZ</li>
+</ul>
+</section>
+<section class="slide" data-n="19">
+<h1 id="2-ui-types">2 UI Types</h1>
+<div class="row">
+  <div class="column" align="center">
+    <img src="../png/ui.png" width="600px">
+  </div>
+  <div class="column" align="left">
+      <br>
+GUI:<br>
+  - Graphical User Interface<br>
+  - Mouse Click, Drag<br><br>
+CLI:<br>
+  - Command Line Interface<br>
+  - Command typing<br>
+    </div>
+</div>
+</section>
+<section class="slide" data-n="20">
+<h1 id="cli-pros">CLI Pros</h1>
+<ol type="1">
+<li>Fast development
+<ul>
+<li>CUI application is implemented first</li>
+</ul></li>
+<li>Quick operation
+<ul>
+<li>x 10 times faster</li>
+</ul></li>
+<li>Batch process
+<ul>
+<li>While you are sleeping</li>
+</ul></li>
+<li>Remote control
+<ul>
+<li>from all over the world (as long as the Internet is available)</li>
+</ul></li>
+</ol>
+</section>
+<section class="slide" data-n="21">
+<h1 id="cli-cons">CLI Cons</h1>
+<ol type="1">
+<li>Not intuitive
+<ul>
+<li>No menu</li>
+<li>Not user friendly</li>
+<li>Need to learn concepts/mechanisms</li>
+</ul></li>
+<li>Commands
+<ul>
+<li>Tons of commands and options</li>
+<li>Cost for learning</li>
+</ul></li>
+</ol>
+<img src="../png/CLI_image.png" width="300px" style="float: right;">
+</section>
+<section class="slide" data-n="22">
+<div class="question">Questions?</div>
+</section>
+<section class="slide" data-n="23">
+<h1 id="next">Next</h1>
+<ol type="1">
+<li>Unix file system</li>
+<li>Basic commands</li>
+<li>Script</li>
+</ol>
+</section>
+<section class="slide" data-n="24">
+<h1 id="important-concepts-unix">Important concepts: Unix</h1>
+<ol type="1">
+<li>File system: Tree structure</li>
+<li>Directory: Current, Home, Root, Parent</li>
+<li>Path: File and Directory location</li>
+</ol>
+</section>
+<section class="slide" data-n="25">
+<p><em>You have to construct the tree image in your mind</em></p>
+</section>
+<section class="slide" data-n="26">
+<h1 id="file-system">File system</h1>
+<div align="center">
+    <img src="../png/tree.png" width="300px">
+</div>
+
+<ul>
+<li>Tree structure
+<ul>
+<li>File</li>
+<li>Directory (Folder)</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide" data-n="27">
+<h1 id="file-system-1">File system</h1>
+<div align="center">
+    <img src="../png/tree_updown.png" width="200px">
+</div>
+
+<ul>
+<li>Leaf: File</li>
+<li>Branch: Directory</li>
+</ul>
+<p>Home, Root, Current, Parent</p>
+</section>
+<section class="slide" data-n="28">
+<h1 id="directory">Directory</h1>
+<ul>
+<li><strong>Current directory</strong>: the directory where you are working</li>
+<li><strong>Home directory</strong>: the first working directory when you log-in the computer</li>
+<li><strong>Root directory</strong>: the top directory</li>
+<li><strong>Parent directory</strong>: the upper directory of the current directory</li>
+</ul>
+</section>
+<section class="slide" data-n="29">
+<h1 id="path-filedir-location">Path (File/Dir location)</h1>
+<div align="center">
+    <img src="../png/path.png" width="300px">
+</div>
+
+<ul>
+<li><strong>Absolute path</strong>: from the Root directory</li>
+<li><strong>Relative path</strong>: from the Current directory</li>
+</ul>
+</section>
+<section class="slide" data-n="30">
+<h1 id="path-filedir-location-1">Path File/Dir location</h1>
+<div class="row">
+  <div class="column" align="center">
+    <img src="../png/path1.png" width="600px">
+  </div>
+  <div class="column" align="left">
+      <br>
+Absolute path<br>
+      - <b>/DirA/File1</b><br>
+      <br>
+Relative path<br>
+  - from Current<br>
+    </div>
+</div>
+</section>
+<section class="slide" data-n="31">
+<h1 id="path-filedir-location-2">Path File/Dir location</h1>
+<div class="row">
+  <div class="column" align="center">
+    <img src="../png/path2.png" width="600px">
+  </div>
+  <div class="column" align="left">
+      <br>
+Absolute path<br>
+      - /DirA/File1<br>
+      <br>
+Relative path<br>
+      - <b>from Current</b><br>
+    </div>
+</div>
+</section>
+<section class="slide" data-n="32">
+<h1 id="path-filedir-location-3">Path File/Dir location</h1>
+<div class="row">
+  <div class="column" align="center">
+    <img src="../png/path3.png" width="600px">
+  </div>
+  <div class="column" align="left">
+      <br>
+Absolute path<br>
+      - /DirA/File1<br>
+      <br>
+Relative path<br>
+      - <b>../File1</b><br>
+    </div>
+</div>
+</section>
+<section class="slide" data-n="33">
+<ul>
+<li>Absolute path: only one</li>
+<li>Relative path: several ways</li>
+<li>../../DirA/File1, ../../DirB/../DirA/File1</li>
+</ul>
+</section>
+<section class="slide" data-n="34">
+<h1 id="directory-1">Directory</h1>
+<ul>
+<li><strong>Current directory</strong>: a directory where you are working</li>
+<li><strong>Home directory</strong>: the first working directory when you log-in the computer</li>
+<li><strong>Root directory</strong>: the top directory</li>
+<li><strong>Parent directory</strong>: the upper directory of the current directory</li>
+</ul>
+</section>
+<section class="slide" data-n="35">
+<h1 id="directory-folder">Directory folder</h1>
+<ul>
+<li>Current directory: <font color=red>.</font></li>
+<li>Home directory: <font color=red>~</font></li>
+<li>Root directory: <font color=red>/</font> (directory separator)</li>
+<li>Parent directory: <font color=red>..</font></li>
+</ul>
+</section>
+<section class="slide" data-n="36">
+<h1 id="exercise-1">Exercise</h1>
+<p>When you are working at <em>/home/user/work</em> directory, where is the parent directory?</p>
+</section>
+<section class="slide" data-n="37">
+<pre><code>/home/user, ..</code></pre>
+</section>
+<section class="slide" data-n="38">
+<p>You are now working at your home directory,
+<em>/home/user</em>. Describe the location of the file,
+<em>/home/work/file1.txt</em>, using relative path.</p>
+</section>
+<section class="slide" data-n="39">
+<pre><code>../work/file1.txt</code></pre>
+</section>
+<section class="slide" data-n="40">
+<h1 id="unix-command">Unix command</h1>
+<p>What you have to do next:</p>
+<ol type="1">
+<li>Understand tons of commands &amp; options</li>
+<li>Type commands on terminal
+<ul>
+<li>type, type, and type, over and over again</li>
+</ul></li>
+</ol>
+<p>Tips: ask Claude Code | ask me <em>if you want to know more about the function and/or usage</em></p>
+</section>
+<section class="slide" data-n="41">
+<div class="question">Questions?</div>
+</section>
+<section class="slide" data-n="42">
+<h1 id="basic-commands">Basic commands</h1>
+<ol type="1">
+<li>Directory Control
+<ul>
+<li>Change, Create, View, Copy, Move, Delete</li>
+</ul></li>
+<li>File Control
+<ul>
+<li>View, Copy, Move, Delete</li>
+<li>Edit, Text Editor</li>
+</ul></li>
+</ol>
+</section>
+<section class="slide" data-n="43">
+<h1 id="terminal">Terminal</h1>
+<div align="center">
+    <img src="../png/terminal.png" width="400px">
+</div>
+
+<ul>
+<li><strong>$</strong> : prompt</li>
+<li>You can confirm on which server you are working before the prompt</li>
+</ul>
+</section>
+<section class="slide" data-n="44">
+<h1 id="command-format">Command format</h1>
+<pre><code>command [options] [arguments]
+command -h
+command --help
+man command</code></pre>
+<p>Ask Claude Code, "how do I use the xxx command?" — then check what it tells you against <code>command --help</code> and <code>man command</code> on this machine. It is faster than a search engine and it is wrong in different ways; the two lines above are how you find out which.</p>
+</section>
+<section class="slide" data-n="45">
+<h1 id="basic-commands-1">Basic commands</h1>
+<ol type="1">
+<li>Make a directory: <em>mkdir</em></li>
+<li>Find a file/directory: <em>cd, pwd, ls</em></li>
+<li>Copy, Move a file/directory: <em>cp, mv</em></li>
+<li>Delete a file/directory: <em>rm, rmdir</em></li>
+<li>View/Edit a file: <em>cat, less, nano</em></li>
+</ol>
+</section>
+<section class="slide" data-n="46">
+<h1 id="make-a-directory-mkdir"><strong>M</strong>a<strong>K</strong>e a <strong>DIR</strong>ectory <em>mkdir</em></h1>
+<p>mkdir [dir name]</p>
+<p>$ mkdir my_dir</p>
+<p>$ mkdir work_dir</p>
+</section>
+<section class="slide" data-n="47">
+<h1 id="list-filesdirectories-ls"><strong>L</strong>i<strong>S</strong>t files/directories <em>ls</em></h1>
+<pre><code>ls ([dir name])
+ls -l ([dir name])
+ls -lh ([dir name])</code></pre>
+<p>$ ls</p>
+<p>$ ls ..</p>
+<p>$ ls /home/masa</p>
+</section>
+<section class="slide" data-n="48">
+<h1 id="exercise-2">Exercise</h1>
+<p>Make <em>your_name</em> directory in home directory
+, and make sure it is certainly made there</p>
+<pre><code>mkdir masa
+ls</code></pre>
+<p><em>Demonstration</em></p>
+<p><em>Check it also in Finder</em></p>
+</section>
+<section class="slide" data-n="49">
+<h1 id="change-working-directory-cd"><strong>C</strong>hange working <strong>D</strong>irectory <em>cd</em></h1>
+<pre><code>cd [dir path]</code></pre>
+<p>$ cd</p>
+<p>$ cd /home/masa/work</p>
+<p>$ cd ..</p>
+</section>
+<section class="slide" data-n="50">
+<h1 id="print-working-directory-pwd"><strong>P</strong>rint <strong>W</strong>orking <strong>D</strong>irectory <em>pwd</em></h1>
+<pre><code>pwd</code></pre>
+<p>$ pwd</p>
+<ul>
+<li>It shows absolute path of the current directory</li>
+</ul>
+</section>
+<section class="slide" data-n="51">
+<h1 id="exercise-3">Exercise</h1>
+<p>Change the working directory to ~/<em>your_account</em>, and check the absolute path of the current directory</p>
+<p>$ cd ~/masaomi</p>
+<p>$ pwd</p>
+</section>
+<section class="slide" data-n="52">
+<h1 id="view-file-content">View file content</h1>
+<pre><code>cat [file]
+less [file]</code></pre>
+<p>$ cat file.txt</p>
+<p>$ less file.txt</p>
+<p>$ more file.txt</p>
+</section>
+<section class="slide" data-n="53">
+<h1 id="edit-a-file-nano-editor">Edit a file nano editor</h1>
+<pre><code>nano [file name]
+vi [file name]
+emacs [file name]</code></pre>
+</section>
+<section class="slide" data-n="54">
+<p>demo: nano</p>
+</section>
+<section class="slide" data-n="55">
+<h1 id="textedit-only-macos">TextEdit only macOS</h1>
+<div align="center">
+    <img src="../png/textedit.png" width="700px">
+</div>
+</section>
+<section class="slide" data-n="56">
+<h1 id="textedit-plain-text-setting">TextEdit Plain Text Setting</h1>
+<div align="center">
+    <img src="../png/plaintext.png" width="700px">
+</div>
+</section>
+<section class="slide" data-n="57">
+<h1 id="2-file-types">2 File Types</h1>
+<ol type="1">
+<li>Text File
+<ul>
+<li>Only character</li>
+<li><em>Text-Editor can open it</em></li>
+<li>cat, less, vi commands are available</li>
+</ul></li>
+<li>Binary File
+<ul>
+<li>Image, Music, etc.</li>
+<li>Executable file</li>
+<li><em>Text-Editor CANNOT open it</em></li>
+</ul></li>
+</ol>
+</section>
+<section class="slide" data-n="58">
+<h1 id="check-file-type">Check file type</h1>
+<pre><code>file [file name]</code></pre>
+<p>If you do not know what type of a file it is, I recommend checking the file type everytime before opening it by text editor or <em>cat</em>, <em>less</em> command.</p>
+</section>
+<section class="slide" data-n="59">
+<h1 id="copy-a-file-cp"><strong>C</strong>o<strong>P</strong>y a file <em>cp</em></h1>
+<pre><code>cp [original file] [target]
+cp -r [original dir] [target]</code></pre>
+<p>$ cp file1.txt file2.txt</p>
+<p>$ cp file1.txt dir1/</p>
+<p>$ cp file1.txt ..</p>
+</section>
+<section class="slide" data-n="60">
+<h1 id="moverename-a-file-mv"><strong>M</strong>o<strong>V</strong>e/Rename a file <em>mv</em></h1>
+<pre><code>mv [original] [taget]</code></pre>
+<p>$ mv file1.txt file2.txt</p>
+<p>$ mv file1.txt dir1/</p>
+<p>$ mv file1.txt ..</p>
+</section>
+<section class="slide" data-n="61">
+<h1 id="rmove-a-file-rm"><strong>RM</strong>ove a file <em>rm</em></h1>
+<pre><code>rm [file name]
+rm -r [dir name]</code></pre>
+<p>$ rm file1.txt</p>
+<p>$ rm -r dir1</p>
+<p>Achtung!! <strong>Impossible to restore!!</strong> <br><font color="red">The most dangerous command!!</font></p>
+</section>
+<section class="slide" data-n="62">
+<h1 id="useful-tips-1">Useful Tips 1</h1>
+<ul>
+<li>Kill Job: Ctrl+c</li>
+<li>Copy: Cmd+c</li>
+<li>Paste: Cmd+v</li>
+</ul>
+</section>
+<section class="slide" data-n="63">
+<p>demo: cat big file, ctrl+c</p>
+</section>
+<section class="slide" data-n="64">
+<h1 id="useful-tips-2">Useful Tips 2</h1>
+<ul>
+<li>Command history</li>
+<li>Tab completion</li>
+</ul>
+</section>
+<section class="slide" data-n="65">
+<h1 id="command-history">Command history</h1>
+<pre><code>history
+!!
+![number]</code></pre>
+<ul>
+<li>The cursor Key also calls command history</li>
+</ul>
+</section>
+<section class="slide" data-n="66">
+<h1 id="tab-completion">Tab completion</h1>
+<ul>
+<li>List possible candidates command, file/dir, path</li>
+<li>Complete command name and file name and path</li>
+</ul>
+<p>Example</p>
+<p>pw[TAB][TAB]</p>
+<p>ls [TAB][TAB]</p>
+<p><em>This is very useful to avoid typos</em></p>
+</section>
+<section class="slide" data-n="67">
+<h1 id="useful-tips-3">Useful tips 3</h1>
+<ul>
+<li>Redirection</li>
+<li>Pipe</li>
+<li>Compression</li>
+</ul>
+</section>
+<section class="slide" data-n="68">
+<h1 id="redirection">Redirection</h1>
+<ul>
+<li>Change standard input/output</li>
+</ul>
+<p>Example</p>
+<pre><code>ls &gt; file_list.dat
+cat file_list.dat</code></pre>
+</section>
+<section class="slide" data-n="69">
+<h1 id="pipe">Pipe</h1>
+<ul>
+<li>Concatenate two commands</li>
+</ul>
+<p>Example</p>
+<pre><code>history | grep &#39;cat&#39;
+ls -l | sort -k 4</code></pre>
+<ul>
+<li>grep: search a word in a file</li>
+<li>sort: sort lines</li>
+</ul>
+</section>
+<section class="slide" data-n="70">
+<h1 id="compressdecompress">Compress/Decompress</h1>
+<ul>
+<li>Compact a file</li>
+<li>Compress algorithms (commands)
+<ul>
+<li>gzip</li>
+<li>zip</li>
+<li>bzip2</li>
+<li>etc.</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide" data-n="71">
+<h1 id="compressdecompress-file">Compress/Decompress (file)</h1>
+<p>Compress</p>
+<pre><code>gzip [file]</code></pre>
+<p>Decompress</p>
+<pre><code>gunzip [file]</code></pre>
+</section>
+<section class="slide" data-n="72">
+<h1 id="compressdecompress-directory">Compress/Decompress (directory)</h1>
+<p>Compress tar + gzip</p>
+<pre><code>tar zcvf [archive name] [dir]</code></pre>
+<p>Decompress tar + gzip</p>
+<pre><code>tar zxvf [archive name]</code></pre>
+<p>File extension is usually <em>.tgz</em> or <em>.tar.gz</em></p>
+</section>
+<section class="slide" data-n="73">
+<h1 id="exercise-4">Exercise</h1>
+<p>Compress [your_name] directory</p>
+<pre><code>tar zcvf masa.tgz masa</code></pre>
+<p>Decompress the archive</p>
+<pre><code>tar zxvf masa.tgz</code></pre>
+</section>
+<section class="slide" data-n="74">
+<h1 id="remote-control">Remote control</h1>
+</section>
+<section class="slide" data-n="75">
+<h1 id="remote-control-ssh-scp">Remote control <em>ssh, scp</em></h1>
+<div class="row">
+  <div class="column" align="left">
+      <br>
+      1. <i>ssh</i>: Remote Login<br>
+      <br>      
+      2. <i>scp, sftp</i>: File transfer<br>
+    </div>
+  <div class="column" align="left">
+    <img src="../png/ssh.png" width="700px">
+  </div>
+</div>
+</section>
+<section class="slide" data-n="76">
+<h1 id="remote-control-ssh-scp-1">Remote control <em>ssh, scp</em></h1>
+<p>ssh: <strong>S</strong>ecure <strong>SH</strong>ell</p>
+<ul>
+<li>log-in/control a remote computer from a local computer</li>
+</ul>
+<p>scp: <strong>S</strong>ecure <strong>C</strong>o<strong>P</strong>y</p>
+<ul>
+<li>transfer a file to/from a remote computer from/to a local computer</li>
+</ul>
+</section>
+<section class="slide" data-n="77">
+<h1 id="fgcz-genomicsuzhch-and-fgcz-kl-004">fgcz-genomics.uzh.ch and fgcz-kl-004</h1>
+<center>
+<img src="../png/servers.jpg" width="800px">
+</center>
+</section>
+<section class="slide" data-n="78">
+<h1 id="ssh">ssh</h1>
+<pre><code>ssh [remote-computer]
+ssh [user name]@[remote-computer]</code></pre>
+<p>Example</p>
+<p>$ ssh user_name@server</p>
+<p>to logtout, type <em>exit</em></p>
+</section>
+<section class="slide" data-n="79">
+<h1 id="scp">scp</h1>
+<pre><code>scp file [server]:[path]
+scp -r dir [server]:[path]
+scp [server]:[path] [target]</code></pre>
+<p>$ scp server:data/TAIR10.fasta .</p>
+<p>$ scp test.dat server:work/masa/</p>
+</section>
+<section class="slide" data-n="80">
+<div class="question">Questions?</div>
+</section>
+<section class="slide" data-n="81">
+<h1 id="required-skills-computationally-1">Required Skills computationally</h1>
+<ul>
+<li>Unix Operation (command typing)
+<ul>
+<li>Many programs run on Unix</li>
+<li>Data is stored on Unix</li>
+</ul></li>
+<li><strong>Scripting</strong> (Programming)
+<ul>
+<li>Software does not do everything</li>
+<li>You need data conversion/processing by yourself</li>
+</ul></li>
+<li><strong>Agentic AI control</strong> (vibe coding)
+<ul>
+<li>An agent can write the script for you</li>
+<li>What comes back is only as good as what you can ask for, and check</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide" data-n="82">
+<h1 id="what-is-scripting">What is Scripting?</h1>
+<pre><code>Computer programming is the comprehensive
+process that leads from an original
+formulation of a computing problem to
+executable programs. (Wikipedia)</code></pre>
+<ul>
+<li>Computer programming</li>
+<li>Software development</li>
+<li>Writing a source code</li>
+</ul>
+</section>
+<section class="slide" data-n="83">
+<h1 id="popular-programming-languages">Popular Programming Languages</h1>
+<ul>
+<li>Shell Script: easy but low functionality</li>
+<li>Perl, Python, Ruby: similar but higher functionality</li>
+<li>R: statistics + graphics, slow</li>
+<li>Java, C/C++: faster but need to learn more</li>
+</ul>
+<p><span class="smaller">Benchmark: <a href="https://attractivechaos.github.io/plb/">https://attractivechaos.github.io/plb/</a></span></p>
+<p><span class="smaller">TIOBE Index: <a href="https://www.tiobe.com/tiobe-index/">https://www.tiobe.com/tiobe-index/</a></span></p>
+</section>
+<section class="slide" data-n="84">
+<ul>
+<li>often question どのプログラミング言語が良いか</li>
+<li>特徴があって、好み</li>
+</ul>
+</section>
+<section class="slide" data-n="85">
+<h1 id="programming-language-processor">Programming Language Processor</h1>
+<ul>
+<li>Compiler Language
+<ul>
+<li>C/C++, Fortran, etc.</li>
+</ul></li>
+<li>Interpreter Language
+<ul>
+<li>Perl, Python, Ruby, R, Shell script</li>
+<li>= <strong>Script Language</strong></li>
+</ul></li>
+</ul>
+</section>
+<section class="slide" data-n="86">
+<h1 id="compiler">Compiler</h1>
+<div class="row">
+  <div class="column" align="center">
+    <img src="../png/compiler.png" width="400px">
+  </div>
+  <div class="column" align="left">
+    <p>
+Convert Source Code to Machine Code, and run.      
+    </p>
+  </div>
+</div>
+</section>
+<section class="slide" data-n="87">
+<h1 id="interpreter">Interpreter</h1>
+<div class="row">
+  <div class="column" align="center">
+    <img src="../png/interpreter.png" width="600px">
+  </div>
+  <div class="column" align="left">
+    <p>
+Loading code line by line, and run.  
+    </p>
+  </div>
+</div>
+</section>
+<section class="slide" data-n="88">
+<h1 id="compiler-vs-interpreter">Compiler vs. Interpreter</h1>
+<ul>
+<li>Compiler
+<ul>
+<li>Fast but compile before run</li>
+<li>Two files, source file and executable file</li>
+</ul></li>
+<li>Interpreter
+<ul>
+<li>Slow but no need to compile</li>
+<li>Only source code file</li>
+</ul></li>
+</ul>
+</section>
+<section class="slide" data-n="89">
+<h1 id="programming-languages">Programming Languages</h1>
+<ul>
+<li>Compiler Languages <em>Fast</em> execution + <em>Strict</em> grammar
+<ul>
+<li>C/C++, Java, Fortran, etc.</li>
+<li>Unix is implemented in C</li>
+</ul></li>
+<li>Interpreter/Script language <em>Slow</em> execution + <em>Flexible</em> grammar
+<ul>
+<li>Shell Script, Perl, Python, Ruby, R</li>
+</ul></li>
+</ul>
+<p>It is easier to learn an <em>interpreter language</em></p>
+</section>
+<section class="slide" data-n="90">
+<h1 id="script-languages">Script Languages</h1>
+<ul>
+<li><strong>Shell Script</strong></li>
+<li>Perl</li>
+<li>Python</li>
+<li>Ruby</li>
+<li>R</li>
+<li>etc.</li>
+</ul>
+</section>
+<section class="slide" data-n="91">
+<h1 id="shell">Shell</h1>
+<div align="center">
+    <img src="../png/os2.png" width="600px">
+</div>
+Primitive user interface software between Kernel and User (a part of operating system)
+</section>
+<section class="slide" data-n="92">
+<h1 id="variety-of-shells">Variety of Shells</h1>
+<p>Shell type</p>
+<ul>
+<li><p><em>sh</em>: Bourne shell</p></li>
+<li><p><em>bash</em>: Bourne-Again shell, <strong>default in Linux</strong></p></li>
+<li><p><em>csh</em>: C shell</p></li>
+<li><p><em>zsh</em>: Z shell</p>
+<p>echo $SHELL</p></li>
+</ul>
+</section>
+<section class="slide" data-n="93">
+<h1 id="shell-script">Shell Script</h1>
+<p>Batch process of commands</p>
+<pre><code>command1
+command2
+command3
+command4</code></pre>
+<p>Unix commands</p>
+</section>
+<section class="slide" data-n="94">
+<h1 id="example-sequential-processing">Example Sequential Processing</h1>
+<pre><code>pwd
+ls
+sleep 3
+echo &#39;END&#39;</code></pre>
+<p><em>Demonstration</em></p>
+</section>
+<section class="slide" data-n="95">
+<h1 id="execute-shell-script">Execute shell script</h1>
+<pre><code>sh test.sh
+bash test.sh
+csh test.sh</code></pre>
+<p><em>possible: shell script to execute shell scripts...</em></p>
+</section>
+<section class="slide" data-n="96">
+<h1 id="environmental-variables">Environmental Variables</h1>
+<p>Shell and other software sometimes use some specific values in the environment</p>
+<pre><code>env
+env | grep SHELL</code></pre>
+</section>
+<section class="slide" data-n="97">
+<h1 id="using-environmental-variables">Using Environmental Variables</h1>
+<p>Common variables and how to use them:</p>
+<pre><code>echo $HOME        # Home directory
+echo $USER        # Current user name
+echo $PATH        # Command search paths
+echo $SHELL       # Current shell</code></pre>
+<p>Setting your own variables:</p>
+<pre><code>MY_VAR=&quot;Hello World&quot;
+echo $MY_VAR
+export MY_VAR     # Make it available to other programs</code></pre>
+</section>
+<section class="slide" data-n="98">
+<h1 id="path--where-the-shell-looks">PATH — where the shell looks</h1>
+<p>You type a <strong>name</strong>, not a location. <code>PATH</code> is the list of places, in order, and the shell <strong>stops at the first one that has it</strong>.</p>
+<div style="border:2px solid #e0e0dc; border-radius:6px; padding:.6em .7em; background:#fff; margin:.5em 0 .3em">
+
+  <div style="font-size:.46em; color:#6a6a6a; font-weight:700; letter-spacing:.04em; margin-bottom:.25em">$ fastqc &mdash; BEFORE</div>
+  <div style="display:flex; align-items:center; gap:.3em; font-size:.5em; font-family:monospace; flex-wrap:nowrap; overflow:hidden">
+    <div style="border:2px solid #cfcfc9; border-radius:4px; padding:.3em .45em; background:#f6f6f4; color:#6a6a6a; white-space:nowrap">~/.local/bin</div><div style="color:#9a9a94">&rarr;</div>
+    <div style="border:2px solid #cfcfc9; border-radius:4px; padding:.3em .45em; background:#f6f6f4; color:#6a6a6a; white-space:nowrap">…/node/bin</div><div style="color:#9a9a94">&rarr;</div>
+    <div style="border:2px solid #cfcfc9; border-radius:4px; padding:.3em .45em; background:#f6f6f4; color:#6a6a6a; white-space:nowrap">…/miniforge3/bin</div><div style="color:#9a9a94">&rarr;</div>
+    <div style="border:2px solid #cfcfc9; border-radius:4px; padding:.3em .45em; background:#f6f6f4; color:#6a6a6a; white-space:nowrap">…/Ruby/bin</div><div style="color:#9a9a94">&rarr;</div>
+    <div style="border:2px solid #cfcfc9; border-radius:4px; padding:.3em .45em; background:#f6f6f4; color:#6a6a6a; white-space:nowrap; border-style:dashed">7 more</div><div style="color:#9a9a94">&rarr;</div>
+    <div style="border:2px solid #b3261e; border-radius:4px; padding:.3em .45em; background:#fdf3f2; color:#b3261e; font-weight:700; white-space:nowrap">command not found</div>
+  </div>
+
+  <div style="font-size:.46em; color:#2e6f40; font-weight:700; letter-spacing:.04em; margin:.55em 0 .25em">$ module load QC/FastQC/0.12.1 &mdash; AFTER</div>
+  <div style="display:flex; align-items:center; gap:.3em; font-size:.5em; font-family:monospace; flex-wrap:nowrap; overflow:hidden">
+    <div style="border:2px solid #2e6f40; border-radius:4px; padding:.3em .45em; background:#e7f1e9; color:#2e6f40; font-weight:700; white-space:nowrap">…/QC/FastQC/0.12.1</div><div style="color:#2e6f40; font-weight:700">&#10003;</div>
+    <div style="border:2px solid #cfcfc9; border-radius:4px; padding:.3em .45em; background:#f6f6f4; color:#6a6a6a; white-space:nowrap; opacity:.5">~/.local/bin</div>
+    <div style="border:2px solid #cfcfc9; border-radius:4px; padding:.3em .45em; background:#f6f6f4; color:#6a6a6a; white-space:nowrap; opacity:.5">…/node/bin</div>
+    <div style="border:2px solid #cfcfc9; border-radius:4px; padding:.3em .45em; background:#f6f6f4; color:#6a6a6a; white-space:nowrap; opacity:.5; border-style:dashed">9 more</div>
+    <div style="font-family:inherit; color:#6a6a6a; font-size:.9em">never reached</div>
+  </div>
+
+  <div style="font-size:.44em; color:#6a6a6a; margin-top:.45em"><b>module load</b> installs nothing. It puts one directory at the <b>front</b> of PATH.</div>
+</div>
+
+<div class="two" style="font-size:.76em; margin-top:.15em">
+<div><code>which fastqc</code> tells you <b>which one you actually got</b> &mdash; here <code>/usr/local/ngseq/packages/QC/FastQC/0.12.1/fastqc</code>.</div>
+<div><code>command not found</code> means <b>not on PATH</b>, not &ldquo;not installed&rdquo;. On this machine the answer is <code>module avail</code>, never an installer.</div>
+</div>
+
+<div class="spine">Two people on this node can type the same command and run different programs. <code>which</code> is how you find out which one you are.</div>
+</section>
+<section class="slide" data-n="99">
+<h1 id="three-things-before-myscriptsh-runs">Three things before <code>./myscript.sh</code> runs</h1>
+<div style="display:grid; grid-template-columns:auto 1fr auto; gap:.45em .8em; align-items:center; font-size:.62em; margin:.6em 0 .4em">
+
+  <div style="border:2px solid #1b1b1b; border-radius:5px; padding:.42em .5em; background:#fff; font-weight:700; text-align:center">is it executable?</div>
+  <div style="color:#b3261e; font-family:monospace; font-size:.88em">bash: ./myscript.sh: <b>Permission denied</b></div>
+  <div style="color:#2e6f40; font-weight:700; font-family:monospace">chmod +x myscript.sh</div>
+
+  <div style="border:2px solid #1b1b1b; border-radius:5px; padding:.42em .5em; background:#fff; font-weight:700; text-align:center">where is it?</div>
+  <div style="color:#b3261e; font-family:monospace; font-size:.88em">bash: myscript.sh: <b>command not found</b> &nbsp;<span style="font-family:inherit; color:#6a6a6a">&mdash; <b>.</b> is not on PATH</span></div>
+  <div style="color:#2e6f40; font-weight:700; font-family:monospace">./myscript.sh</div>
+
+  <div style="border:2px solid #1b1b1b; border-radius:5px; padding:.42em .5em; background:#fff; font-weight:700; text-align:center">who interprets it?</div>
+  <div style="color:#b3261e; font-family:monospace; font-size:.88em">bash: ./myscript.sh: <b>cannot execute: required file not found</b></div>
+  <div style="color:#2e6f40; font-weight:700; font-family:monospace">#!/bin/bash</div>
+
+</div>
+
+<div class="two" style="align-items:start; margin-top:.2em">
+
+  <div style="border:2px solid #e0e0dc; border-radius:6px; padding:.5em .6em; background:#fff">
+    <div style="font-size:.46em; color:#6a6a6a; font-weight:700; letter-spacing:.04em">THE x BIT &mdash; ls -l</div>
+    <div style="font-family:monospace; font-size:.58em; margin-top:.35em; line-height:1.6">
+      -rw-rw-r--&nbsp; myscript.sh<br>
+      <span style="color:#6a6a6a">$ chmod +x myscript.sh</span><br>
+      -rw<b style="color:#2e6f40">x</b>rw<b style="color:#2e6f40">x</b>r-<b style="color:#2e6f40">x</b>&nbsp; myscript.sh
+    </div>
+    <div style="font-size:.46em; color:#6a6a6a; margin-top:.3em">Three <b>x</b>: you, your group, everyone else.</div>
+  </div>
+
+  <div style="border:2px solid #e0e0dc; border-radius:6px; padding:.5em .6em; background:#fff">
+    <div style="font-size:.46em; color:#6a6a6a; font-weight:700; letter-spacing:.04em">THE SHEBANG &mdash; FIRST LINE, FIRST TWO CHARACTERS</div>
+    <div style="font-family:monospace; font-size:.58em; margin-top:.35em; line-height:1.6">
+      <b>#!</b>/bin/bash<br>
+      <span style="color:#6a6a6a">echo hello</span>
+    </div>
+    <div style="font-size:.46em; color:#6a6a6a; margin-top:.3em">Names the program that reads the rest. <b>Leave it out and bash runs the file itself</b> &mdash; which works here and will not somewhere else.</div>
+  </div>
+
+</div>
+
+<div class="trap" style="font-size:.7em"><span class="lab">and the way round all three</span>
+<code>bash myscript.sh</code> needs <b>no</b> <code>chmod</code>, <b>no</b> <code>./</code> and <b>no</b> shebang &mdash; you named the interpreter yourself. That is how every script in this course is run.</div>
+
+<div class="spine"><code>chmod +x</code> does not make a file a program. It gives the kernel permission to try.</div>
+</section>
+<section class="slide" data-n="100">
+<h1 id="if-statements-in-bash">If Statements in Bash</h1>
+<pre><code>if [ condition ]; then
+    commands
+else
+    default_commands
+fi</code></pre>
+<p>Common conditions:</p>
+<ul>
+<li><code>[ -f file ]</code> - file exists</li>
+<li><code>[ -d dir ]</code> - directory exists</li>
+<li><code>[ "$var" = "value" ]</code> - string comparison</li>
+</ul>
+</section>
+<section class="slide" data-n="101">
+<h1 id="while-loops-in-bash">While Loops in Bash</h1>
+<pre><code>while [ condition ]; do
+    commands
+done</code></pre>
+<p>Common patterns:</p>
+<pre><code># Counter loop
+count=1
+while [ $count -le 5 ]; do
+    echo &quot;Count: $count&quot;
+    count=$((count + 1))
+done</code></pre>
+</section>
+<section class="slide" data-n="102">
+<h1 id="practical-shell-script-example">Practical Shell Script Example</h1>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="co"># process_files.sh - Process FASTQ files</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Set variables</span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="va">INPUT_DIR</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$1</span><span class="st">&quot;</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Process each FASTQ file</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> file <span class="kw">in</span> <span class="st">&quot;</span><span class="va">$INPUT_DIR</span><span class="st">&quot;</span>/<span class="pp">*</span>.fastq<span class="kw">;</span> <span class="cf">do</span></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">[</span> <span class="ot">-f</span> <span class="st">&quot;</span><span class="va">$file</span><span class="st">&quot;</span> <span class="bu">]</span><span class="kw">;</span> <span class="cf">then</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">filename</span><span class="op">=</span><span class="va">$(</span><span class="fu">basename</span> <span class="st">&quot;</span><span class="va">$file</span><span class="st">&quot;</span> .fastq<span class="va">)</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">echo</span> <span class="st">&quot;Processing </span><span class="va">$filename</span><span class="st">...&quot;</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Count reads and save to output</span></span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>        <span class="va">read_count</span><span class="op">=</span><span class="va">$(</span><span class="fu">grep</span> <span class="at">-c</span> <span class="st">&quot;^@&quot;</span> <span class="st">&quot;</span><span class="va">$file</span><span class="st">&quot;</span><span class="va">)</span></span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a>        <span class="bu">echo</span> <span class="st">&quot;</span><span class="va">$filename</span><span class="st">: </span><span class="va">$read_count</span><span class="st"> reads&quot;</span> <span class="op">&gt;&gt;</span> summary.txt</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">fi</span></span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+</section>
+<section class="slide" data-n="103">
+<h1 id="links">Links</h1>
+<ul>
+<li>Linux Shell Scripting Tutorial (LSST) v2.0 Beginner's Handbook
+<a href="http://bash.cyberciti.biz/guide/Main_Page">http://bash.cyberciti.biz/guide/Main_Page</a>
+<a href="http://www.freeos.com/guides/lsst/">http://www.freeos.com/guides/lsst/</a></li>
+<li>Bash Shell Programming
+<a href="http://arachnoid.com/linux/shell_programming.html">http://arachnoid.com/linux/shell_programming.html</a></li>
+<li>Top 10 Best Cheat Sheets
+<a href="http://www.cyberciti.biz/tips/linux-unix-commands-cheat-sheets.html">http://www.cyberciti.biz/tips/linux-unix-commands-cheat-sheets.html</a></li>
+</ul>
+</section>
+<section class="slide" data-n="104">
+<h1 id="summary-keywords">Summary (keywords)</h1>
+<p>Bioinformatics requires</p>
+<ol type="1">
+<li>Unix = Operating System</li>
+<li>CLI operation → Tons of commands</li>
+<li>Scripting = Programming, some learning cost, but AI can help you</li>
+</ol>
+</section>
+<section class="slide" data-n="105">
+<h1 id="if-you-are-never-going-to-learn-to-code">If you are never going to learn to code</h1>
+<p><b>A car used to be repairable by whoever owned it.</b> Then cars got complicated and repairing one became somebody’s job — but drivers still change a tyre, check the oil, and know what a flat battery looks like at six in the morning. <b>The same line is moving in code.</b></p>
+<div style="margin:.7em 0 .3em">
+
+  <div style="display:grid; grid-template-columns:5.6em 1fr; gap:.7em; align-items:center; font-size:.55em; color:#6a6a6a; margin-bottom:.25em">
+    <div></div>
+    <div style="display:grid; grid-template-columns:50fr 11fr 25fr; gap:5px; text-align:center">
+      <div>somebody else does this now</div>
+      <div>&nbsp;</div>
+      <div style="color:#2e6f40; font-weight:700">still yours &#8212; and it is small</div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:5.6em 1fr; gap:.7em; align-items:center; margin:.3em 0">
+    <div style="font-weight:700; font-size:.66em; text-align:right">A CAR</div>
+    <div style="display:grid; grid-template-columns:50fr 11fr 25fr; gap:5px; text-align:center; font-size:.58em">
+      <div style="background:#ececea; color:#4a4a46; padding:.55em .35em; border-radius:4px">engine &#183; gearbox &#183; electronics</div>
+      <div style="border:2px dashed #bdbdb8; color:#9a9a94; padding:.45em .2em; border-radius:4px; font-weight:700">&#8594;</div>
+      <div style="background:#e7f1e9; border:2px solid #2e6f40; color:#2e6f40; font-weight:700; padding:.5em .35em; border-radius:4px">tyre &#183; oil &#183; battery &#183; the warning light</div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:5.6em 1fr; gap:.7em; align-items:center; margin:.3em 0">
+    <div style="font-weight:700; font-size:.66em; text-align:right">CODE</div>
+    <div style="display:grid; grid-template-columns:50fr 11fr 25fr; gap:5px; text-align:center; font-size:.58em">
+      <div style="background:#ececea; color:#4a4a46; padding:.55em .35em; border-radius:4px">syntax &#183; boilerplate &#183; the library you were never going to read</div>
+      <div style="border:2px dashed #bdbdb8; color:#9a9a94; padding:.45em .2em; border-radius:4px; font-weight:700">&#8594;</div>
+      <div style="background:#e7f1e9; border:2px solid #2e6f40; color:#2e6f40; font-weight:700; padding:.5em .35em; border-radius:4px">the words &#183; what it actually ran<br>&#183; what is impossible here</div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:5.6em 1fr; gap:.7em; align-items:center; font-size:.55em; color:#6a6a6a; margin-top:.25em">
+    <div></div>
+    <div style="display:grid; grid-template-columns:50fr 11fr 25fr; gap:5px; text-align:center">
+      <div>&nbsp;</div>
+      <div style="color:#9a9a94">more keeps<br>arriving</div>
+      <div>&nbsp;</div>
+    </div>
+  </div>
+
+</div>
+
+<p>Everything new lands on the grey side, so <b>the bar keeps getting longer and the green does not get shorter</b>. It is the whole of your leverage: it is what lets you ask for the right thing, and notice when you did not get it.</p>
+<div class="spine">You do not have to build the engine. You do have to know it has one &#8212; enough to say what is wrong, and to notice when the answer cannot be right.</div>
+</section>
+<section class="slide" data-n="106">
+<h1 id="vibe-coding">Vibe coding</h1>
+<div class="two" style="margin-top:.5em"><div style="border:2px solid #8a8a84; border-radius:6px; padding:.5em .6em; background:#fff"><div style="font-size:.5em; color:#6a6a6a; font-weight:700; letter-spacing:.06em; text-align:center">HOW IT WAS</div><div style="font-size:.56em; margin:.35em 0 .25em"><div style="border:2px solid #1b1b1b; border-radius:5px; background:#fff; padding:.4em .3em; text-align:center; font-weight:600">you</div><div style="text-align:center; color:#9a9a94; font-weight:700; line-height:1">&darr;</div><div style="border:2px solid #1b1b1b; border-radius:5px; background:#fff; padding:.4em .3em; text-align:center; font-weight:600">write the code</div><div style="text-align:center; color:#9a9a94; font-weight:700; line-height:1">&darr;</div><div style="border:2px solid #1b1b1b; border-radius:5px; background:#fff; padding:.4em .3em; text-align:center; font-weight:600">run it</div><div style="text-align:center; color:#9a9a94; font-weight:700; line-height:1">&darr;</div><div style="border:2px solid #1b1b1b; border-radius:5px; background:#fff; padding:.4em .3em; text-align:center; font-weight:600">read the error</div><div style="text-align:center; color:#9a9a94; font-weight:700; line-height:1; margin-top:.25em">&#8630; back to the top</div></div><div style="font-size:.5em; color:#6a6a6a; text-align:center">you saw every line, because you typed every line</div></div><div style="border:2px solid #b3261e; border-radius:6px; padding:.5em .6em; background:#fff"><div style="font-size:.5em; color:#b3261e; font-weight:700; letter-spacing:.06em; text-align:center">VIBE CODING</div><div style="font-size:.56em; margin:.35em 0 .25em"><div style="border:2px solid #1b1b1b; border-radius:5px; background:#fff; padding:.4em .3em; text-align:center; font-weight:600">you</div><div style="text-align:center; color:#9a9a94; font-weight:700; line-height:1">&darr;</div><div style="border:2px solid #1b1b1b; border-radius:5px; background:#fff; padding:.4em .3em; text-align:center; font-weight:600">say what you want</div><div style="text-align:center; color:#9a9a94; font-weight:700; line-height:1">&darr;</div><div style="border:2px dashed #bdbdb8; border-radius:5px; background:#f4f4f2; color:#9a9a94; padding:.4em .3em; text-align:center; font-weight:600">the code</div><div style="text-align:center; color:#9a9a94; font-weight:700; line-height:1">&darr;</div><div style="border:2px solid #1b1b1b; border-radius:5px; background:#fff; padding:.4em .3em; text-align:center; font-weight:600">run it</div><div style="text-align:center; color:#9a9a94; font-weight:700; line-height:1">&darr;</div><div style="border:2px solid #1b1b1b; border-radius:5px; background:#fff; padding:.4em .3em; text-align:center; font-weight:600">does the output<br>look right?</div><div style="text-align:center; color:#9a9a94; font-weight:700; line-height:1; margin-top:.25em">&#8630; back to the top</div></div><div style="font-size:.5em; color:#6a6a6a; text-align:center">the loop closes without the middle box ever being opened</div></div></div>
+
+<div class="spine">The grey box is the whole of it. Not &ldquo;I wrote it badly&rdquo; &mdash; <b>I did not read it</b>.</div>
+</section>
+<section class="slide" data-n="107">
+<h1 id="-on-a-machine-nine-other-people-are-using">… on a machine nine other people are using</h1>
+<div class="three" style="margin-top:.5em"><div style="border:2px solid #e0e0dc; border-radius:6px; padding:.5em .55em; background:#fff"><div style="background:#22242a; color:#e6e6e6; font-family:'SF Mono',Menlo,Consolas,monospace; font-size:.46em; padding:.55em 1.7em; border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">rm -rf $OUT/*</div><div style="color:#2e6f40; font-weight:700; font-size:.52em; margin:.35em 0 .15em">&#10003; exit 0</div><div style="color:#b3261e; font-size:.52em; line-height:1.35"><b>$OUT was never set</b>, so the shell expanded the line to <code>rm -rf /*</code>. It ran, and kept going until it reached something you do not own</div></div><div style="border:2px solid #e0e0dc; border-radius:6px; padding:.5em .55em; background:#fff"><div style="background:#22242a; color:#e6e6e6; font-family:'SF Mono',Menlo,Consolas,monospace; font-size:.46em; padding:.55em 1.7em; border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">STAR --runThreadN 8</div><div style="color:#2e6f40; font-weight:700; font-size:.52em; margin:.35em 0 .15em">&#10003; exit 0</div><div style="color:#b3261e; font-size:.52em; line-height:1.35">Four times faster for you. <b>Four times slower for the other nine</b>, who are on the same cores</div></div><div style="border:2px solid #e0e0dc; border-radius:6px; padding:.5em .55em; background:#fff"><div style="background:#22242a; color:#e6e6e6; font-family:'SF Mono',Menlo,Consolas,monospace; font-size:.46em; padding:.55em 1.7em; border-radius:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">cp *.bam ~/</div><div style="color:#2e6f40; font-weight:700; font-size:.52em; margin:.35em 0 .15em">&#10003; exit 0</div><div style="color:#b3261e; font-size:.52em; line-height:1.35"><b>Home is the small disk.</b> It is now full &mdash; not just yours, everyone&#8217;s</div></div></div>
+
+<div class="flow" style="font-size:.7em"><span class="b ok">the command ran</span><span class="ar">&ne;</span><span class="b hot">the command did what you meant</span></div>
+
+<div class="spine key">The shell has no opinion about what you meant. That is what you are for.</div>
+</section>
+<section class="slide" data-n="108">
+<div class="question">Questions?</div>
+</section>
+<section class="slide" data-n="109">
+<p>Next: Unix command practice!!</p>
+</section>
+<footer>
+<b>EEE338 — Next Generation Sequencing for Evolutionary Functional Genomics</b><br>
+University of Zurich / Functional Genomics Center Zurich · Masaomi Hatakeyama · <b>autumn semester 2026</b><br>
+Lectures 17, 18, 22 and 23 September 2026 · student presentations 7 October 2026<br>
+Practicals: 2026 hands-on practicals ·
+AI component: <a href="EEE338_2026_AI_Agents_part1.html">AI Agents for Bioinformatics</a>
+(<a href="EEE338_2026_AI_Agents_part1.html">part 1</a> ·
+ part 2)<br>
+<span style="font-size:.9em">Slide numbers on the right are the notebook cell numbers.</span>
+</footer>
+</body></html>

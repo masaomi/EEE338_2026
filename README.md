@@ -34,6 +34,34 @@ It has **no external references** — no fonts, scripts or stylesheets fetched
 from anywhere — so it works with the network off, and it will still work years
 from now.
 
+### Friday 18 September — NGS Bioinformatics, and Linux
+
+The two morning lectures.
+
+| | |
+|---|---|
+| `slides/EEE338_2026_NGS_Bioinformatics_slides.html` | sequencing, FASTQ and FASTA, Phred quality, FastQC |
+| `slides/EEE338_2026_NGS_Bioinformatics.html` | the same thing as one page to scroll |
+| `slides/EEE338_2026_Linux_slides.html` | the operating system, the shell, the file system, commands, shell scripts, AI agents |
+| `slides/EEE338_2026_Linux.html` | the same thing as one page to scroll |
+
+Unlike part 1 above, these two have no markdown version — the reading page is
+HTML as well. **Both are files to open, not pages GitHub will render**, so clone
+and open them:
+
+```sh
+ $ git clone https://github.com/masaomi/EEE338_2026.git
+ $ open EEE338_2026/slides/EEE338_2026_NGS_Bioinformatics.html
+```
+
+The figures they use are in `png/` and the four FastQC reports they link to are
+in `fastqc_examples/`. No external references here either: with the repository
+on your disk, everything works offline.
+
+> The exercises are in the decks; the worked answers are not. They are shown in
+> the room. Work them out first — the point of an exercise you can look up is
+> the ten minutes before you look it up.
+
 ----
 
 ## Hands-on pages
