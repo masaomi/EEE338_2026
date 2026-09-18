@@ -72,7 +72,7 @@ not happened.
 | page | session | what it covers |
 |---|---|---|
 | [`EEE338_2026_Claude_Code_part1`](https://gist.github.com/masaomi/669fa1793204663bc5fcf5a2cc753903) | Thu 17 Sep | install, your key, the first screen |
-| `EEE338_2026_Claude_Code_part2` | Fri 18 Sep | the loop, permission modes, `CLAUDE.md`, the experiment, subagents |
+| [`EEE338_2026_Claude_Code_part2`](https://gist.github.com/masaomi/0bccc0344858644517212de1ae17ab6f) | Fri 18 Sep | the loop, permission modes, `CLAUDE.md`, the experiment, subagents |
 | [`EEE338_2026_Command_Practice`](https://gist.github.com/masaomi/27b268bd650847730b75906f60ec37d8) | Fri 18 Sep | the file system by hand, GC content, FastQC |
 | `EEE338_2026_Mapping` | Tue 22 Sep | quality control, mapping, basic statistics |
 | `EEE338_2026_Counting` | Wed 23 Sep | counting and normalisation |
