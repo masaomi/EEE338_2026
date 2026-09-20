@@ -132,7 +132,7 @@ footer b{ color:var(--ink); }
 <a class="backlink" style="right:6.6em" href="EEE338_2026_NGS_Bioinformatics_slides.html">present &rarr;</a>
 <div class="srcnote">
   <b>EEE338 2026 — NGS Bioinformatics</b> — Sequencing, FASTQ/FASTA, Phred, FastQC.<br>
-  Rendered from <code>EEE338_2026_NGS_Bioinformatics.ipynb</code> on 2026-09-18 05:48.
+  Rendered from <code>EEE338_2026_NGS_Bioinformatics.ipynb</code> on 2026-09-20 11:33.
   <b>The content is the 2025 material</b>; only the title slide, the repository
   link and the image paths were updated. Images load from the local
   <code>png/</code> directory — this page needs no network.
@@ -1019,10 +1019,31 @@ GATTT
 +
 !&#39;&#39;*(</code></pre>
 </section>
+<section class="slide" data-n="63">
+<h1 id="exercise1-1">Exercise1</h1>
+<pre><code>! = 33-33 = 0
+&#39; = 39-33 = 6
+&#39; = 39-33 = 6
+* = 42-33 = 9
+( = 40-33 = 7</code></pre>
+<p>Average quality score = (0+6+6+9+7)/5 = 5.6</p>
+</section>
 <section class="slide" data-n="64">
 <h1 id="exercise2">Exercise2</h1>
 <p>What is the base call accuracy of the character <strong>A</strong>, <strong>!</strong> and <strong>I</strong> ?</p>
 <p>(Illumina 1.9 Phred Quality Score)</p>
+</section>
+<section class="slide" data-n="65">
+<h1 id="exercise2-1">Exercise2</h1>
+<pre><code>A = 65 - 33 = 32
+P = 10^(32/-10) = 10^(-3.2) = 0.00063...
+Accuracy = 99.9369...%
+! = 33 - 33 = 0
+P = 10^(0/-10)  = 10^0 = 1 
+Accuracy = 0.0%
+I = 73 - 33 = 40
+P = 10^(40/-10) = 10^(-4) = 0.0001
+Accuracy = 99.99%</code></pre>
 </section>
 <section class="slide" data-n="66">
 <h1 id="popular-software">Popular software</h1>
