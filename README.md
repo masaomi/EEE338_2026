@@ -72,6 +72,20 @@ and the Claude Code part 2 page comes after it.
 The screens that showed the links to the hands-on pages are not in this copy.
 The links themselves are in the table below, which is where they keep.
 
+### Tuesday 22 September — RNAseq analysis, part 1
+
+The afternoon lecture, before the mapping practical.
+
+| | |
+|---|---|
+| [**RNAseq analysis 1**](https://masaomi.github.io/EEE338_2026/slides/EEE338_2026_RNAseq_analysis1_slides.html) | alignment and homology search, Smith–Waterman by hand, seed and extend, spliced and alignment-free mappers, SAM format and mapping quality, and the *A. kamchatica* dataset the practicals use |
+
+This one has no reading page — the deck is the only version of it.
+
+> The Smith–Waterman exercise is in the deck; the filled table and the traceback
+> are not. Do it on paper first — two four-base sequences, so it is a five by
+> five table, and it is the one part of mapping you can check by hand.
+
 ----
 
 ## Hands-on pages
@@ -100,7 +114,7 @@ display.
 ## Layout
 
 ```
-slides/     the lecture decks, and a reading version of each
+slides/     the lecture decks, and a reading version of most of them
   img/      photographs and screenshots used by the decks
   fig/      the decks' own diagrams, lifted out so the reading versions can show them
   vendor/   reveal.js, kept in the repository so the decks need no network
