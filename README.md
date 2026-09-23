@@ -82,9 +82,26 @@ The afternoon lecture, before the mapping practical.
 
 This one has no reading page — the deck is the only version of it.
 
-> The Smith–Waterman exercise is in the deck; the filled table and the traceback
-> are not. Do it on paper first — two four-base sequences, so it is a five by
-> five table, and it is the one part of mapping you can check by hand.
+> The Smith–Waterman exercise is in the deck, and since the morning after the
+> session **so is the worked answer** — the filled table first, then the
+> traceback one step per screen. Do it on paper before you turn to it: two
+> four-base sequences, so it is a five by five table, and it is the one part of
+> mapping you can check by hand.
+
+### Wednesday 23 September — RNAseq analysis, parts 2 and 3
+
+The two morning lectures, before the counting and differential expression
+practicals below.
+
+| | |
+|---|---|
+| [**RNAseq analysis 2**](https://masaomi.github.io/EEE338_2026/slides/EEE338_2026_RNAseq_analysis2_slides.html) | what a read may be counted for, multi-mapping, RPKM, TPM and CPM, the shape of count data and why it is negative binomial, the plots that show an experiment, distances, hierarchical clustering, k-means and PCA, transformation and scaling |
+| [**RNAseq analysis 3**](https://masaomi.github.io/EEE338_2026/slides/EEE338_2026_RNAseq_analysis3_slides.html) | hypothesis testing and the two schools of probability, FPR and FDR, the multiple testing problem, Bonferroni and Benjamini–Hochberg, likelihood and the likelihood ratio test, Gene Ontology, ORA and GSEA |
+
+Neither of these has a reading page — the decks are the only version of them.
+
+> Both decks carry exercises, and their worked answers are **not** here yet.
+> They follow the session, the way part 1's did.
 
 ----
 
