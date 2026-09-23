@@ -135,6 +135,20 @@ display.
 
 ----
 
+## The written exam
+
+**Tuesday 6 October, 13:00–17:00, room 13J96** — and it is **no AI, of any
+kind**. There is a mock paper to work through first:
+
+| | |
+|---|---|
+| [`EEE338_2026_Mock_Exam`](https://gist.github.com/masaomi/551c4501b95289134984e69b6f48cda5) | seventeen questions, the same shape as the paper, with this year's measured numbers |
+
+Do it **on paper**, the way the exam will be. The worked answers are not linked
+here — they are gone through in the room.
+
+----
+
 ## Layout
 
 ```
