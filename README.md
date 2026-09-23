@@ -126,7 +126,7 @@ not happened.
 | [`EEE338_2026_Claude_Code_part2`](https://gist.github.com/masaomi/0bccc0344858644517212de1ae17ab6f) | Fri 18 Sep | the loop, permission modes, `CLAUDE.md`, the experiment, subagents |
 | [`EEE338_2026_Mapping`](https://gist.github.com/masaomi/c56aea0096b31295897c5135c7297c7d) | Tue 22 Sep | quality control, mapping, basic statistics |
 | [`EEE338_2026_Counting`](https://gist.github.com/masaomi/74f3b6d1b224621fdc28e9c22b17169a) | Wed 23 Sep | counting and normalisation |
-| `EEE338_2026_DEG_Analysis` | Wed 23 Sep | differential expression |
+| [`EEE338_2026_DEG_Analysis`](https://gist.github.com/masaomi/9b5bdc419f692b87adf5558ae9033494) | Wed 23 Sep | differential expression |
 | `EEE338_2026_Final_Practice` | Wed 23 Sep | the run you do on your own |
 | `EEE338_2026_Final_Practice_Report` | Wed 23 Sep | what to hand in |
 
