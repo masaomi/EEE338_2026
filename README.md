@@ -103,12 +103,12 @@ Neither of these has a reading page — the decks are the only version of them.
 > Both decks carry exercises, and their worked answers are **not** here yet.
 > They follow the session, the way part 1's did.
 
-Someone asked, during the afternoon, what a likelihood ratio test actually does
-to the counts. That answer got longer than a slide:
+Two questions from that afternoon got answers longer than a slide:
 
 | | |
 |---|---|
 | [**What a likelihood ratio test actually does**](https://masaomi.github.io/EEE338_2026/notes/LRT_explained_en.html) | HMA4, six counts, worked to the end by hand — and then why the number edgeR prints for the same gene is a hundred orders of magnitude away from it |
+| [**What the MDS plot is, and how it differs from a PCA**](https://masaomi.github.io/EEE338_2026/notes/MDS_explained_en.html) | the same six libraries drawn three ways — and the default nobody reads, which measures every pair of samples with a different 500 genes |
 
 ----
 
