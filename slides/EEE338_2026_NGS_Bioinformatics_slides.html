@@ -434,16 +434,6 @@ top of these, not beside them.</p>
 
 <p class="src">3.1 Gb &mdash; the first complete assembly, T2T-CHM13 v2.0, is <b>3,117,292,070 bp</b> over chromosomes 1&ndash;22, X, Y and the mitochondrion (GCA_009914755.4, read 13 Sep 2026). The 3,055 Mb in Nurk <i>et al.</i>, <i>Science</i> 376:44&ndash;53 (2022) is v1.1, which has <b>no Y</b>: the CHM13 cell line is 46,XX, and the Y was finished later from a second donor. The textbook 3.2 Gb is the same quantity, rounded up; GRCh38 before it left about 8 % of the genome unresolved and carried that part as runs of N. &middot; 19,442: GENCODE release 50, gencodegenes.org/human/stats.html, read 13 Sep 2026; the same release lists 35,885 lncRNA genes and 14,702 pseudogenes. &middot; ~1.5 %: International Human Genome Sequencing Consortium, <i>Nature</i> 409:860&ndash;921 (2001); counting strict CDS only, ENCODE puts it at 1.2 %.</p>
 </div>
-<aside class="notes">
-<ul>
-<li>Human, 30-40 trillion cells (2m long if all the DNA molecules were laid end to end)</li>
-<li>3.1 Gb haploid, 6.2 Gb diploid. The "3.2 Gb" you were taught is the same number rounded up</li>
-<li>The complete T2T-CHM13 v2.0 assembly is 3.117 Gb with X, Y and the mitochondrion; the 3.055 Gb in the 2022 paper is the version without a Y</li>
-<li>GRCh38 is about 3.1 Gb too, but ~8% of it was unresolved and stored as runs of N</li>
-<li>~19,400 protein coding genes (GENCODE 50), plus ~35,900 lncRNA genes and ~14,700 pseudogenes</li>
-<li>coding exons are about 1.5% of the genome; the other 98.5% is not protein coding</li>
-</ul>
-</aside>
 </section>
 </section>
 <section>
@@ -719,9 +709,6 @@ TGTTGGTTGAGGAGGGTATGGAGGAGGAGGGTAAGCTGACGATAGCGGAGG
 
 <p class="src">&ldquo;<i>The complete</i> sequence&rdquo; is the goal, not the result: GRCh38 carried about 8 % of the human genome as <b>N</b> for a decade.</p>
 </div>
-<aside class="notes">
-<p>genome = gene + ome, but including intergenic region, intron</p>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -968,66 +955,6 @@ something you made, and can be wrong.</p>
 
 <p class="src">Accuracy is as the vendors state it: PacBio gives median HiFi read quality &ge;Q30 with 90 % of bases Q30+ (pacb.com/revio); Oxford Nanopore gives Q20+ simplex &mdash; 99.0 to 99.6 % modal depending on run speed &mdash; and &asymp;Q30 duplex for R10.4.1 + Kit 14 (nanoporetech.com); Illumina defines Q30 as one error in 1,000 bases. Read 13 Sep 2026. Note that nanopore duplex reads are only a fraction of a run's output. Costs are an order of magnitude only: list prices differ by provider, country and year, and no vendor-independent series has been published since NHGRI stopped updating its cost-per-megabase data in 2022 (Wetterstrand KA, genome.gov/sequencingcostsdata).</p>
 </div>
-<aside class="notes">
-<blockquote>
-<p><strong>Rule of thumb</strong>: Q30 ≈ 0.1% error, Q20 ≈ 1% error, Q40 ≈ 0.01% error.</p>
-</blockquote>
-<table>
-<thead>
-<tr>
-<th>Platform</th>
-<th>Representative model / chemistry</th>
-<th>Typical per-base error (raw or standard consensus)</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Illumina (short-read, SBS)</td>
-<td>NovaSeq X / X Plus, 2×150</td>
-<td>~0.1% (≈Q30) per base</td>
-<td>Spec sheets and large service labs routinely report %Q30 ≥85–95% for 2×150 runs; Illumina’s Q-score doc equates Q30 to 0.1% error. (<a href="https://www.illumina.com/downloads/novaseq-x-series-specification-sheet-m-us-00197.html?utm_source=chatgpt.com" title="NovaSeq X and NovaSeq X Plus Sequencing Systems Specification Sheet">illumina.com</a>)</td>
-</tr>
-<tr>
-<td>MGI / BGI (short-read, DNBSEQ)</td>
-<td>DNBSEQ-T7 / T7RS (Standard MPS 2.0)</td>
-<td>~0.1% (≈Q30) per base</td>
-<td>Vendor materials emphasize higher %Q30 and rising %Q40 with SM 2.0; brochures show Q30 ≈90% on recent instruments/runs. (<a href="https://en.mgi-tech.com/news/439/?utm_source=chatgpt.com" title="DNBSEQ sequencing platform comprehensively supports WGS ... - MGI Tech">en.mgi-tech.com</a>)</td>
-</tr>
-<tr>
-<td>PacBio HiFi (long-read, CCS)</td>
-<td>Sequel IIe / Revio (HiFi reads)</td>
-<td>≤0.1% (≥99.9% accuracy; ≈Q30), often reported up to Q40 (~0.01%) on high-quality HiFi</td>
-<td>Recent reviews and PacBio app notes describe HiFi single-molecule consensus reads at ~99.9% and higher. (<a href="https://academic.oup.com/gpb/article/23/1/qzaf003/8005231?utm_source=chatgpt.com" title="Long and Accurate: How HiFi Sequencing is Transforming Genomics">Oxford Academic</a>)</td>
-</tr>
-<tr>
-<td>Oxford Nanopore (long-read) — <strong>simplex</strong></td>
-<td>R10.4.1 + Kit14, simplex basecalling</td>
-<td>~1% (≈Q20) <strong>raw</strong>; best cases ~0.5% (Q23)</td>
-<td>Kit14 materials describe “Q20+ accuracy” for simplex; third-party summaries often cite ~99.5% raw (Q23) in optimal setups. (<a href="https://nanoporetech.com/document/kit-14-device-and-informatics?utm_source=chatgpt.com" title="Kit 14 sequencing and duplex basecalling - Oxford Nanopore Technologies">Oxford Nanopore Technologies</a>)</td>
-</tr>
-<tr>
-<td>Oxford Nanopore (long-read) — <strong>duplex</strong></td>
-<td>R10.4.1 + Kit14, duplex basecalling</td>
-<td>~0.1% (≈Q30); assemblies can exceed Q40 in optimized pipelines</td>
-<td>ONT documents state duplex “Q30+”; ONT demos/reporting note Q40+ assemblies with R10.4.1 + Kit14 + duplex. (<a href="https://nanoporetech.com/document/kit-14-device-and-informatics?utm_source=chatgpt.com" title="Kit 14 sequencing and duplex basecalling - Oxford Nanopore Technologies">Oxford Nanopore Technologies</a>)</td>
-</tr>
-</tbody>
-</table>
-<hr />
-<h2 id="sources-latest--representative">Sources (latest &amp; representative)</h2>
-<ul>
-<li>Illumina. <strong>NovaSeq X / X Plus specification sheet</strong> (2025). %Q30/throughput tables. (<a href="https://www.illumina.com/downloads/novaseq-x-series-specification-sheet-m-us-00197.html?utm_source=chatgpt.com" title="NovaSeq X and NovaSeq X Plus Sequencing Systems Specification Sheet">illumina.com</a>)</li>
-<li>Novogene. <strong>NovaSeq X Plus data at a glance</strong> (Q30 &gt;95% example). (<a href="https://www.novogene.com/us-en/about/news/reaching-maximum-465gb-lane-with-an-average-q30-95-novogenes-novaseq-x-plus-data-at-a-glance/?utm_source=chatgpt.com" title="Reaching Maximum 465Gb/lane, with an Average Q30 &gt;95% ... - Novogene">Novogene</a>)</li>
-<li>Illumina. <strong>Quality Scores for NGS</strong>（Q30 ≈ 0.1% errorの定義）. (<a href="https://www.illumina.com/Documents/products/technotes/technote_Q-Scores.pdf?utm_source=chatgpt.com" title="Quality Scores for Next-Generation Sequencing - Illumina">illumina.com</a>)</li>
-<li>MGI. <strong>Standard MPS 2.0 (SM 2.0) update</strong>（%Q30/%Q40の向上）(2024). (<a href="https://en.mgi-tech.com/news/439/?utm_source=chatgpt.com" title="DNBSEQ sequencing platform comprehensively supports WGS ... - MGI Tech">en.mgi-tech.com</a>)</li>
-<li>MGI. <strong>Recent brochures/specs showing %Q30 around ~90% on DNBSEQ</strong> (2024–2025). (<a href="https://dev1mgi.roundserv.com/wp-content/uploads/2025/02/DNBSEQ-T7-brochure.pdf?utm_source=chatgpt.com" title="Turbocharge Your Sequencing High-speed, high flexibility and ultra-high ...">dev1mgi.roundserv.com</a>)</li>
-<li>Oxford Academic (Genomics, Proteomics &amp; Bioinformatics). <strong>“Long and Accurate: How HiFi Sequencing is Transforming Genomics”</strong> (2025) — HiFi ≈99.9%. (<a href="https://academic.oup.com/gpb/article/23/1/qzaf003/8005231?utm_source=chatgpt.com" title="Long and Accurate: How HiFi Sequencing is Transforming Genomics">Oxford Academic</a>)</li>
-<li>PacBio. <strong>Application brief: HiFi sequencing enables greater accuracy…</strong> (2025). (<a href="https://pacbio.cn/wp-content/uploads/Application-brief-HiFi-sequencing-enables-greater-accuracy-of-somatic-variant-calling.pdf?utm_source=chatgpt.com" title="Application brief: HiFi sequencing enables greater accuracy of ... - PacBio">PacBio</a>)</li>
-<li>Oxford Nanopore. <strong>Kit 14 chemistry &amp; duplex basecalling</strong> (R10.4.1; Q20+ simplex, Q30+ duplex). (<a href="https://nanoporetech.com/document/kit-14-device-and-informatics?utm_source=chatgpt.com" title="Kit 14 sequencing and duplex basecalling - Oxford Nanopore Technologies">Oxford Nanopore Technologies</a>)</li>
-<li>ONT resource centre / talks. <strong>R10.4.1 + Kit14 duplex enabling Q40+ assemblies (pipeline-dependent)</strong>. (<a href="https://oxfordnanoporedx.com/resource-centre/lc22-human-genome-assembly-and-analysis-using-r10-4-1-kit-14-and-duplex-data?utm_source=chatgpt.com" title="Human genome assembly and analysis using R10.4.1, Kit 14, and duplex ...">Oxford Nanopore Technologies</a>)</li>
-</ul>
-</aside>
 </section>
 <section>
 <div class="pane">

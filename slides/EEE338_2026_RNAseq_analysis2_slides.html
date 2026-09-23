@@ -467,9 +467,6 @@ outside every gene is <code>no_feature</code>. Both are reported, and neither is
 </ul>
 <div class="fragment spine">Twice as many reads, in a library that is five times larger. The ratio is what matters, never the count.</div>
 </div>
-<aside class="notes">
-<p>A: 5/50, B: 2/10</p>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -585,19 +582,6 @@ fragment is the two reads together, so it is not counted twice.</p>
 <p>CPM = (Read count × 10⁶) / (Total mapped reads)</p>
 <div class="fragment spine">RPKM divides by total reads. TPM divides by total RPK. That one difference is why only TPM sums to the same number in every sample.</div>
 </div>
-<aside class="notes">
-<p>== TCC</p>
-<ul>
-<li><a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3716788/pdf/1471-2105-14-219.pdf">http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3716788/pdf/1471-2105-14-219.pdf</a>
-TCC: an R package for comparing tag count data with robust normalization strategies</li>
-</ul>
-<p>== RPKM, FPKM</p>
-<ul>
-<li>RPKM: Reads Per Kilobase of exon per Million mapped reads</li>
-<li>FPKM: Fragments Per Kilobase of exon per Million mapped fragments</li>
-<li>Fragment: A set of paired-end reads</li>
-</ul>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -631,15 +615,6 @@ TCC: an R package for comparing tag count data with robust normalization strateg
 </ul>
 <div class="fragment spine">TPM sums to 1,000,000 in every sample; RPKM does not. That is the entire reason TPM exists.</div>
 </div>
-<aside class="notes">
-<ul>
-<li>Compare the first example and the second example
-<ul>
-<li>gene1 is same in RPKM, but different in TPM</li>
-<li>total RPKM is different in each batch, but total TPM is 1,000,000 always</li>
-</ul></li>
-</ul>
-</aside>
 </section>
 <section>
 <section>
@@ -1036,19 +1011,6 @@ Gene regulatory networks are generally thought to be made up of a few highly con
 </ul>
 <div class="fragment spine">Distance asks how much. Correlation asks in what pattern. Time courses want the second; two conditions want the first.</div>
 </div>
-<aside class="notes">
-<h1 id="distance-metrics-for-rna-seq-clustering">Distance Metrics for RNA-seq Clustering</h1>
-<ul>
-<li><strong>Euclidean</strong>: 絶対的な発現量の違いを重視</li>
-<li><strong>Pearson correlation</strong>: 発現パターンの類似性を重視</li>
-<li><strong>Spearman correlation</strong>: ランクベースの相関（ノイズに頑健）</li>
-<li><strong>使い分けの指針</strong>:
-<ul>
-<li>時系列データ → 相関ベース</li>
-<li>条件比較 → Euclidean</li>
-</ul></li>
-</ul>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -1146,14 +1108,6 @@ Gene regulatory networks are generally thought to be made up of a few highly con
 
 <p><span class="small">Reference: <a href="https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs">https://dashee87.github.io/data%20science/general/Clustering-with-Scikit-with-GIFs</a></span></p>
 </div>
-<aside class="notes">
-<p>== Hierarchical Clustering Image</p>
-  <img src="../png/clustering1.png" width="600px">
-</aside>
-<aside class="notes">
-<p>Hierarchical Clustering Image</p>
-  <img src="../png/clustering2.png" width="600px">
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -1237,17 +1191,6 @@ Gene regulatory networks are generally thought to be made up of a few highly con
 
 <div class="fragment spine">Ward tends to produce clusters of similar size, which is flattering &mdash; and a reason not to read too much into the shape of the tree.</div>
 </div>
-<aside class="notes">
-<p>== Distance function</p>
-<ul>
-<li>euclidean</li>
-<li>manhattan</li>
-<li>minkowski</li>
-<li>canberra</li>
-<li>binary</li>
-<li>maximum</li>
-</ul>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -1315,16 +1258,6 @@ Gene regulatory networks are generally thought to be made up of a few highly con
 
 <p class="src">DESeq2 offers two better transformations for small experiments: <b>VST</b> and <b>rlog</b>. edgeR usually works on <code>log2(CPM + 1)</code>.</p>
 </div>
-<aside class="notes">
-<p>note</p>
-<p>(3) rlog transformation
-(4) VST transformation</p>
-<ul>
-<li><strong>VST (Variance Stabilizing Transformation)</strong>: DESeq2での推奨手法</li>
-<li><strong>rlog transformation</strong>: サンプル数が少ない場合に推奨</li>
-<li><strong>Log2(CPM + 1)</strong>: EdgeRでよく使用される</li>
-</ul>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -1424,9 +1357,6 @@ during the data preprocessing step (wikipedia).</code></pre>
 <p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>=</mo><mn>0.0</mn><mo>,</mo><msup><mi>σ</mi><mn>2</mn></msup><mo>=</mo><mn>1.0</mn></mrow><annotation encoding="application/x-tex">\mu = 0.0, \sigma^2=1.0</annotation></semantics></math>,
 closer to the normal distribution</p>
 </div>
-<aside class="notes">
-<p>vst</p>
-</aside>
 </section>
 <section>
 <div class="pane">

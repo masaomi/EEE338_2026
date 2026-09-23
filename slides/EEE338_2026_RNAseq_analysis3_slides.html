@@ -324,15 +324,6 @@ kbd{ background:#eee; border:1px solid #bbb; border-bottom-width:2px; border-rad
 </ul>
 <p>...etc.</p>
 </div>
-<aside class="notes">
-<p>note</p>
-<ul>
-<li>baySeq Hardcastle and Kelly, BMC Bioinformatics, 11:422, 2010</li>
-<li>edgeR (Robinson et al., Bioinformatics, 26: 139-140, 2010)</li>
-<li>DESeq (Anders and Huber, Genome Biol., 11: R106, 2010)</li>
-<li>DESeq2</li>
-</ul>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -348,9 +339,6 @@ Sometimes</li>
 <p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\rightarrow</annotation></semantics></math> Many false positive errors</p>
 <div class="fragment spine">A fold change on its own is the ratio of two noisy numbers. Without a test behind it, a large ratio is most often a small denominator.</div>
 </div>
-<aside class="notes">
-<p>gfold</p>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -497,9 +485,6 @@ Sometimes</li>
 
 <div class="fragment spine">Frequentist testing never tells you the probability that a hypothesis is true. It tells you how surprising your data would be if it were.</div>
 </div>
-<aside class="notes">
-<p>We should not use <strong>accept</strong> the alternative hypothesis</p>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -735,9 +720,6 @@ one considers the set as a whole.</code></pre>
     }
 hist(p_value)</code></pre>
 </div>
-<aside class="notes">
-<p>来年はこれを一個ずつ実演したいところ</p>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -1160,39 +1142,6 @@ given data.(Wikipedia)</code></pre>
 <div class="fragment spine">D = 7.36 on one degree of freedom gives p = 0.0067. The single degree of freedom is the one extra parameter the alternative model was allowed.</div>
 </div>
 </div>
-<aside class="notes">
-<p>このあとこれからp-valueを求めるところを示したいところ
-GLMでfitさせてからlikelihood ratio test</p>
-</aside>
-<aside class="notes">
-<h2 id="df1-自由度について"><code>df=1</code> (自由度)について</h2>
-<p><strong>自由度</strong>とは「独立に変化できるパラメータの数」です。</p>
-<p>コイントス例では：</p>
-<ul>
-<li><strong>Null model (H0)</strong>: 両者とも同じコイン → パラメータ1個（確率p）</li>
-<li><strong>Alternative model (H1)</strong>: 各自別のコイン → パラメータ2個（確率p1, p2）</li>
-</ul>
-<p><strong>自由度 = Alternative model のパラメータ数 - Null model のパラメータ数 = 2 - 1 = 1</strong></p>
-<h2 id="lowertailfalse-について"><code>lower.tail=FALSE</code> について</h2>
-<p>カイ二乗分布のグラフを想像してください：</p>
-<pre><code>       |
-   確率密度|    /\
-       |   /  \
-       |  /    \____
-       |_/          \____
-       |________________\_____ χ²値
-       0         7.36    </code></pre>
-<ul>
-<li><strong><code>lower.tail=TRUE</code></strong>: 左側の面積 P(χ² ≤ 7.36) ≈ 0.993</li>
-<li><strong><code>lower.tail=FALSE</code></strong>: 右側の面積 P(χ² &gt; 7.36) ≈ 0.007</li>
-</ul>
-<p><strong>統計検定では右側の面積（小さい方）がp値</strong>になります。これは「偶然でこんなに大きな値が出る確率はどれくらい？」を表しています。</p>
-<p>つまり：</p>
-<ul>
-<li>7.36という値が偶然出る確率は約0.67％</li>
-<li>とても小さいので「偶然ではない」→統計的に有意</li>
-</ul>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -1246,44 +1195,6 @@ GLMでfitさせてからlikelihood ratio test</p>
 </ul>
 <div class="fragment spine">A list of gene identifiers is not a result. Functional analysis is the step where it becomes one.</div>
 </div>
-<aside class="notes">
-<p>以下に要点で整理します。</p>
-<h3 id="kegg">KEGG</h3>
-<ul>
-<li>内容: 代謝・シグナル・疾患などの「配線図」的パスウェイ。代謝（化合物・反応）に強い。KO（KEGG Orthology）で種横断。</li>
-<li>粒度: 経路全体の俯瞰に最適（反応や化合物ノードも含む）。</li>
-<li>種: 多数（生物種別に <code>hsa</code>, <code>mmu</code> など）。</li>
-<li>典型用途: 代謝文脈の解釈、配線図を見たい時の可視化、ORA/GSEA の遺伝子集合としても利用可。</li>
-<li>ライセンス: 商用・一括DLは制限あり（研究でも再配布等に注意）。</li>
-</ul>
-<h3 id="reactome">Reactome</h3>
-<ul>
-<li>内容: 文献根拠に基づく人中心の詳細な反応・イベント指向データベース（R-HSA-…）。階層構造で精緻、機能注釈と因果が明確。</li>
-<li>粒度: 反応レベルで細かい（分子間相互作用・調節イベント）。</li>
-<li>種: 人が中心（他種はオーソログ推定で派生）。</li>
-<li>典型用途: 高品質な経路注釈での ORA/GSEA、詳細な因果経路の追跡。ReactomePA などで解析。</li>
-<li>ライセンス: オープン（CC-BY）。頻繁に更新。</li>
-</ul>
-<h3 id="msigdb">MSigDB</h3>
-<ul>
-<li>内容: GSEA用の「遺伝子集合カタログ」。KEGG/Reactome/GO等の取り込みに加え、Hallmark・Oncogenic・Immunologic など独自コレクション（C1–C8）。</li>
-<li>粒度: 経路というより「遺伝子リスト」。Hallmark は冗長性を抑えた高品質セット。</li>
-<li>種: 主に人（マウス等へのマッピング版もあり）。</li>
-<li>典型用途: GSEAの標準。ORAにも使えるが機構図はない。Hallmarkで頑健なシグナル検出。</li>
-<li>ライセンス: 登録必要（学術利用は可）。バージョン管理明確。</li>
-</ul>
-<h3 id="使い分けの目安">使い分けの目安</h3>
-<ul>
-<li>代謝や化合物まで含む配線図で機構を見たい: KEGG</li>
-<li>人中心で精緻・文献裏付けの反応レベル因果を追いたい: Reactome</li>
-<li>遺伝子発現データでロバストにエンリッチメント（特にGSEA）: MSigDB（まずは Hallmark）</li>
-</ul>
-<h3 id="まとめ">まとめ</h3>
-<ul>
-<li>KEGG/Reactome は「機構データベース」、MSigDB は「解析用遺伝子集合集」。</li>
-<li>ORA/GSEAどちらでも、配線図や因果を重視するなら Reactome/KEGG、検出力と冗長性低減なら MSigDB Hallmark が有利。</li>
-</ul>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -1427,17 +1338,6 @@ regulates the mitotic cell cycle</p>
 <li>More sensitive to small but coordinated changes</li>
 </ul>
 </div>
-<aside class="notes">
-<h1 id="functional-analysisenrichment-analysis-1">Functional analysis/Enrichment analysis</h1>
-<ol type="1">
-<li>ORA: Over Representation Analysis</li>
-<li>FCS: Functional Class Scoring (e.g. GSEA)</li>
-</ol>
-<p><span class="small">Ref:<br>
-<a href="https://hbctraining.github.io/DGE_workshop_salmon_online/lessons/10_FA_over-representation_analysis.html">https://hbctraining.github.io/DGE_workshop_salmon_online/lessons/10_FA_over-representation_analysis.html</a><br>
-<a href="https://hbctraining.github.io/DGE_workshop_salmon_online/lessons/11_FA_functional_class_scoring.html">https://hbctraining.github.io/DGE_workshop_salmon_online/lessons/11_FA_functional_class_scoring.html</a>
-</span></p>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -1522,17 +1422,6 @@ data:  matrix(c(25, 100, 100, 1000), nrow = 2)
 p-value = 0.0004687</code></pre>
 <div class="fragment spine">Raise 10 to 25 and nothing else, and it becomes significant. The test is doing arithmetic on the ratio, not on the biology.</div>
 </div>
-<aside class="notes">
-<h1 id="algorithm-and-test">Algorithm and Test</h1>
-<div align="center">
-  <img src="../png/algorithm.png" width="700px">
-</div>
-
-<p><a href="http://www.bioconductor.org/packages/release/bioc/html/topGO.html">http://www.bioconductor.org/packages/release/bioc/html/topGO.html</a></p>
-</aside>
-<aside class="notes">
-<p>reivew elim in topgo again (memo for next year)</p>
-</aside>
 </section>
 <section>
 <div class="pane">

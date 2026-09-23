@@ -276,9 +276,6 @@ kbd{ background:#eee; border:1px solid #bbb; border-bottom-width:2px; border-rad
 </ul></li>
 </ul>
 </div>
-<aside class="notes">
-<p>Note: trimming&amp;filtering, exercise?</p>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -366,9 +363,6 @@ find the best-matching of more than two sequences<br>
 <p><em>why?</em></p>
 </div>
 </div>
-<aside class="notes">
-<p>because the alignment should be between a reference sequence and a short read. Usually there are a lot of short reads and it is computationally impossible to do multiple alignment for all of them.</p>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -379,9 +373,6 @@ find the best-matching of more than two sequences<br>
 <p><em>why?</em></p>
 </div>
 </div>
-<aside class="notes">
-<p>because normally it is a comparison of several sequences (of genes) at the same time among several species.</p>
-</aside>
 </section>
 </section>
 <section>
@@ -407,9 +398,6 @@ actually matches.</p>
 <p><em>why?</em></p>
 </div>
 </div>
-<aside class="notes">
-<p>because normally a reference sequence is very long and sequenced reads are very short, and the purpose of the RNAseq alignment is to find the location that the short reads coming from in the long reference sequence.</p>
-</aside>
 </section>
 </section>
 <section>
@@ -648,9 +636,6 @@ guaranteed to be right.</p>
   <img src="../png/gattaka3.png" width="700px">
     </div>
 </div>
-<aside class="notes">
-<p>There are some issues</p>
-</aside>
 </section>
 </section>
 <section>
@@ -872,12 +857,6 @@ BLAST, <strong>BWA-MEM / BWA-MEM2</strong>, <strong>Bowtie2</strong>, minimap2<b
 </ul>
 <div class="fragment spine">No alignment at all &mdash; only whether a read's k-mers are compatible with a transcript. That is where the hundred-fold speed comes from.</div>
 </div>
-<aside class="notes">
-<h1 id="de-bruijn-graph-dbg">de Bruijn Graph (DBG)</h1>
-<p>Read is divided by k-mer</p>
-<h1><img src="../png/bruijn1.png" width="600px"></h1>
-<h1 id="caption--k-mer--2">caption = k-mer = 2</h1>
-</aside>
 </section>
 <section>
 <div class="pane">
@@ -1098,17 +1077,6 @@ Developed for fast processing/indexing<br>
 
 <div class="fragment spine">FLAG and CIGAR carry the most information and are the hardest to read. Everything else is nearly self-explanatory.</div>
 </div>
-<aside class="notes">
-<h1 id="mapping-quality-score">Mapping quality score</h1>
-<div align="center">
-  <img src="../png/maping_quality_score.png" width="700px">
-</div>
-* **SUM_BASE_Q(best):** the sum of base quality scores at mismatched bases for the best alignment
-* **SUM_BASE_Q(i):** the sum of base quality scores at mismatched bases for the i alignment
-
-<p>Mapping quality scores quantify the probability that a read is misplaced.</p>
-<p>Li H, Ruan J, Durbin R., 2008, Genome Research 18:1851-8.</p>
-</aside>
 </section>
 </section>
 <section>
