@@ -103,6 +103,13 @@ Neither of these has a reading page — the decks are the only version of them.
 > Both decks carry exercises, and their worked answers are **not** here yet.
 > They follow the session, the way part 1's did.
 
+Someone asked, during the afternoon, what a likelihood ratio test actually does
+to the counts. That answer got longer than a slide:
+
+| | |
+|---|---|
+| [**What a likelihood ratio test actually does**](https://masaomi.github.io/EEE338_2026/notes/LRT_explained_en.html) | HMA4, six counts, worked to the end by hand — and then why the number edgeR prints for the same gene is a hundred orders of magnitude away from it |
+
 ----
 
 ## Hands-on pages
@@ -136,6 +143,7 @@ slides/     the lecture decks, and a reading version of most of them
   fig/      the decks' own diagrams, lifted out so the reading versions can show them
   vendor/   reveal.js, kept in the repository so the decks need no network
 png/        figures the practical pages point at
+notes/      longer written answers to things asked in the room
 ```
 
 ----
