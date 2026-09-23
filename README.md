@@ -127,7 +127,7 @@ not happened.
 | [`EEE338_2026_Mapping`](https://gist.github.com/masaomi/c56aea0096b31295897c5135c7297c7d) | Tue 22 Sep | quality control, mapping, basic statistics |
 | [`EEE338_2026_Counting`](https://gist.github.com/masaomi/74f3b6d1b224621fdc28e9c22b17169a) | Wed 23 Sep | counting and normalisation |
 | [`EEE338_2026_DEG_Analysis`](https://gist.github.com/masaomi/9b5bdc419f692b87adf5558ae9033494) | Wed 23 Sep | differential expression |
-| `EEE338_2026_Final_Practice` | Wed 23 Sep | the run you do on your own |
+| [`EEE338_2026_Final_Practice`](https://gist.github.com/masaomi/b9ce917ee2bcdec25f0c9df0ce187e93) | Wed 23 Sep | the run you do on your own |
 | `EEE338_2026_Final_Practice_Report` | Wed 23 Sep | what to hand in |
 
 What *is* here is what those pages draw on: `png/` holds the figures they
